@@ -202,7 +202,7 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
       if (result.template_id) {
         const tmpl = await getTemplate(result.template_id);
         setTemplate(tmpl);
-        setMatchedName(result.template_name);
+        setMatchedName(result.template_name || "");
         const fields: Record<string, string | null> = {};
         for (const [k, v] of Object.entries(result.fields)) {
           fields[k] = v != null ? String(v) : null;

@@ -274,6 +274,20 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
         </div>
       )}
 
+      {phase === "authenticating" && (
+        <div className="animate-fadeIn fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center">
+          <svg className="w-24 h-24 text-white mb-6 animate-pulse" viewBox="0 0 96 96" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="24" y="16" width="48" height="64" rx="16" />
+            <circle cx="48" cy="42" r="10" />
+            <path d="M38 56c0-5.5 4.5-10 10-10s10 4.5 10 10" strokeLinecap="round" />
+            <line x1="48" y1="8" x2="48" y2="16" strokeLinecap="round" />
+            <line x1="48" y1="80" x2="48" y2="88" strokeLinecap="round" />
+          </svg>
+          <p className="text-white text-lg font-semibold">Confirm with Face ID</p>
+          <p className="text-white/60 text-sm mt-2">Verifying identity...</p>
+        </div>
+      )}
+
       {phase === "success" && (
         <div className="animate-fadeIn flex flex-col items-center text-center py-16">
           <div className="animate-popIn w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6"><Chk c="w-10 h-10 text-emerald-600"/></div>
