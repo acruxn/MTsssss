@@ -10,10 +10,14 @@ export default function Layout({
   children,
   currentPath,
   onNavigate,
+  language,
+  onLanguageChange,
 }: {
   children: ReactNode;
   currentPath: string;
   onNavigate: (path: string) => void;
+  language: string;
+  onLanguageChange: (lang: string) => void;
 }) {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -34,7 +38,17 @@ export default function Layout({
             {item.label}
           </button>
         ))}
-        <span className="ml-auto text-xs text-gray-500">Voice Form Assistant</span>
+        <select
+          value={language}
+          onChange={(e) => onLanguageChange(e.target.value)}
+          className="ml-auto bg-gray-800 text-white border border-gray-700 rounded-lg px-2 py-1 text-sm"
+        >
+          <option value="en">🇬🇧 English</option>
+          <option value="ms">🇲🇾 Bahasa Melayu</option>
+          <option value="zh">🇨🇳 中文</option>
+          <option value="ta">🇮🇳 தமிழ்</option>
+        </select>
+        <span className="ml-2 text-xs text-gray-500">Voice Form Assistant</span>
       </nav>
       <main>{children}</main>
     </div>

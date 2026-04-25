@@ -23,7 +23,7 @@ const LANG_MAP: Record<string, string> = {
   ta: "ta-IN",
 };
 
-export default function VoiceAssistant({ onNavigate }: { onNavigate: (path: string) => void }) {
+export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavigate: (path: string) => void; language?: string }) {
   const [template, setTemplate] = useState<FormTemplate | null>(null);
   const [session, setSession] = useState<VoiceSession | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -51,7 +51,7 @@ export default function VoiceAssistant({ onNavigate }: { onNavigate: (path: stri
     const recognition = new (SR as new () => Record<string, unknown>)();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = LANG_MAP[template?.language || "en"] || "en-US";
+    recognition.lang = LANG_MAP[language || template?.language || "en"] || "en-US";
 
     let finalTranscript = "";
     recognition.onresult = (e: SpeechRecognitionEvent) => {
@@ -107,10 +107,10 @@ export default function VoiceAssistant({ onNavigate }: { onNavigate: (path: stri
     try {
       let sess = session;
       if (!sess) {
-        sess = await createSession(template.id, template.language);
+        sess = await createSession(template.id, language || template.language);
         setSession(sess);
       }
-      const result: ExtractedFields = await extractFields(sess.id, text, template.language);
+      const result: ExtractedFields = await extractFields(sess.id, text, language || template.language);
       setExtracted((prev) => {
         const merged = { ...prev };
         for (const [k, v] of Object.entries(result.fields)) {
