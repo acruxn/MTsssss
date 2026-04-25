@@ -67,11 +67,13 @@ Browser (HTTPS)                    AWS Singapore              Alibaba Cloud KL
 ## Key Features
 
 - **Voice-first**: Speak in BM, EN, ZH, Cantonese, TA — AI auto-detects language and responds in kind
+- **Multi-turn conversation**: Say "I need help" → AI asks clarifying questions → understands after back-and-forth
 - **Speech-to-speech**: AI speaks back confirmation via TTS after processing
 - **Real transactions**: Balance deducts, transaction history persists in Alibaba Cloud RDS
 - **Fraud detection**: Flags large amounts (>RM500), high-balance-usage (>80%), first-time recipients
 - **Biometric verification**: Tap-to-verify (Face ID / Touch ID / PIN mock) before execution
 - **Proper form UIs**: Transfer, Fuel, Reload, Bills, Scan — each with validation and real API calls
+- **Generic TaskPage**: Actions without dedicated UIs get auto-generated forms from flow definitions
 - **Action flow simulator**: Voice commands auto-fill screens with typewriter animation
 - **14 TNG actions**: Covers payments, transfers, bills, fuel, GO+, GOpinjam, and more
 - **Account switcher**: 5 demo users with different balances and languages for demo day

@@ -1,7 +1,7 @@
 # FormBuddy — Project Master Plan
 ## TNG Digital FinHack 2026 | Track 1: Financial Inclusion
 
-> Single source of truth. Last updated: 26 Apr 2026, 2:35 AM MYT
+> Single source of truth. Last updated: 26 Apr 2026, 3:15 AM MYT
 
 ---
 
@@ -60,11 +60,18 @@ NORMAL FLOW (form UIs):
 
 VOICE FLOW (FormBuddy):
 1. User taps floating 🎙️ mic button (bottom-right, ONLY entry to voice)
-2. Speaks naturally: "Nak hantar duit kat Ahmad seratus ringgit untuk sewa"
-3. AI detects: Fund Transfer, recipient=Ahmad, amount=RM100, ref=sewa
+2. Speaks naturally — can be specific or vague:
+   - Specific: "Nak hantar duit kat Ahmad seratus ringgit" → AI classifies immediately
+   - Vague: "I need help" → AI asks "What would you like to do?" → multi-turn chat
+3. AI detects intent + extracts params (or asks clarifying questions via chat)
 4. Shows ActionFlow: auto-fill screens → confirm → biometric (tap to verify) → receipt
-5. Balance deducts via real API call
-6. TTS reads back: "Sent RM100 to Ahmad" (speech-to-speech)
+5. Balance deducts via real API call, receipt shows real balance + transaction ID
+6. TTS reads back confirmation in user's detected language (speech-to-speech)
+
+TASK FLOW (manual forms for actions without dedicated pages):
+1. User taps action in Services/GOfinance → /task?action=X
+2. Generic form page renders editable fields from flow definition
+3. User fills fields → submits → real API call → balance deducts → success
 ```
 
 ---
@@ -292,34 +299,38 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
             "This looks exactly like TNG eWallet. But watch this."
             Point to floating mic button. "Uncle just taps this."
 
-0:40-1:30  Demo 1: Fuel Payment in Malay (speech-to-speech)
+0:40-1:20  Demo 1: Conversational — vague request
+            Tap mic → "I need help"
+            AI responds: "Hi! I can help with transfers, bills, fuel, and more. What do you need?"
+            User: "Send money to Ahmad"
+            AI: "How much would you like to send?"
+            User: "100 ringgit"
+            AI classifies → Fund Transfer → auto-fill → biometric → receipt
+            "The AI had a conversation to understand what uncle needed."
+
+1:20-2:00  Demo 2: Fuel Payment in Malay (one-shot)
             Tap mic → "Nak pump minyak RON95 lima puluh"
-            AI returns: Fuel Payment, RON95, RM50
-            Agent speaks back confirmation (TTS)
-            Auto-fill screens → Tap to verify (Face ID/Touch ID) → Receipt
-            Balance deducts on home page
+            AI classifies immediately, speaks back in BM
+            Auto-fill → Tap to verify → Receipt with real balance
+            "If uncle knows what he wants, one sentence is enough."
 
-1:30-2:10  Demo 2: Fund Transfer in English
-            Tap mic → "Send money to Ahmad one hundred ringgit for rent"
-            AI returns: Fund Transfer, Ahmad, RM100, rent
-            Fraud warning: "First-time recipient"
-            Confirm → Biometric → Success
-            Show balance page — real transaction history
+2:00-2:30  Demo 3: Show normal form UIs + TaskPage
+            Tap Transfer → proper form. Tap Fuel → fuel type selector.
+            Services → Toll → generic TaskPage form.
+            "Every action works manually too — same backend, same real balance."
 
-2:10-2:40  Demo 3: Show normal form UIs
-            Tap Transfer button → proper form with validation
-            Tap Fuel → fuel type selector, presets
-            "Both voice AND manual — same backend, same real balance"
+2:30-3:00  Demo 4: Switch accounts + check balance
+            Switch to Mei Ling (Chinese) → "Baki aku berapa?"
+            AI responds with real balance in detected language.
+            Show 5 demo users with different balances.
+            "5 languages, 14 actions, real transactions."
 
-2:40-3:10  Demo 4: Check balance in BM → "Baki aku berapa?"
-            Show Services page. "14 TNG actions, 4 languages."
-            Architecture: Browser → AWS Lambda → Bedrock AI → Alibaba Cloud RDS (KL)
-
-3:10-3:40  Multi-cloud story: "Data stays in Malaysia on Alibaba Cloud.
+3:00-3:30  Architecture: Browser → AWS Lambda → Bedrock Sonnet 4.6 → Alibaba Cloud RDS (KL)
+            "Data stays in Malaysia on Alibaba Cloud.
             Compute + AI on AWS Singapore. Terraform unifies deployment."
 
-3:40-3:55  Impact: elderly, migrant workers, low-literacy communities
-3:55-4:00  "FormBuddy. Financial inclusion, one voice at a time."
+3:30-3:50  Impact: elderly, migrant workers, low-literacy communities
+3:50-4:00  "FormBuddy. Financial inclusion, one voice at a time."
 ```
 
 ---
@@ -436,12 +447,30 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 - [x] Update MASTER_PLAN, README with final state
 - [ ] Rehearse demo script
 
-### Future: Multi-Turn Conversational Agent
-Currently the voice agent is single-turn (user speaks once → AI classifies → action). For production:
-- **Option A (quick)**: Keep messages[] array in frontend, send full conversation history to detect-intent. If confidence < 0.7, show AI response as chat and keep listening. No backend changes.
-- **Option B (better)**: Use Bedrock Converse API with native multi-turn messages[]. Backend stores conversation per session.
-- **Option C (production)**: Bedrock AgentCore / Strands with session memory, planning, multi-step reasoning.
-- Flow: User says vague thing → AI asks clarifying questions → after enough context, triggers action flow with confirmation.
+### Phase 11: Multi-Turn Conversational Agent ✅ DONE (26 Apr 2026, 3:15 AM)
+- [x] Agent.tsx: multi-turn chat with message history (chat bubbles, scrollable)
+- [x] Agent.tsx: if AI can't classify → asks clarifying questions, stays in listening mode
+- [x] Agent.tsx: check_balance fetches real balance from API (no hardcoded value)
+- [x] Agent.tsx: type-to-chat input triggers submit on Enter
+- [x] Backend: "chat" action type — AI asks follow-up questions when intent is vague
+- [x] Backend: chat_response field in tool schema + detect-intent response
+- [x] Backend: messages[] param in detect-intent for conversation history (last 6 turns)
+- [x] Backend: prompt rules 10-12 for conversational behavior
+- [x] ActionFlow: receipt shows real balance from API (no more hardcoded RM 1,184.56)
+- [x] ActionFlow: receipt shows real transaction ID from API
+- [x] ActionFlow: fraud warnings displayed on receipt
+- [x] flows.ts: check_balance returns null (handled in Agent.tsx with real API)
+- [x] flows.ts: added amount steps to buy_insurance, buy_ticket, food_delivery
+- [x] TaskPage: generic form page for actions without dedicated UIs (/task?action=X)
+- [x] Routes: all /agent?action=X replaced with /task?action=X or dedicated pages
+- [x] Routes: only floating mic button → /agent (TNGHome + AppShell)
+- [x] Services: scan_pay → /scan in direct map
+
+### Future Enhancements
+- Bedrock Converse API for native multi-turn (currently frontend-managed history)
+- Bedrock AgentCore / Strands with session memory for production
+- WhatsApp bot integration
+- Offline Whisper for STT without internet
 
 ---
 
