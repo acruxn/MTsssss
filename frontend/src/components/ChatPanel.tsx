@@ -138,6 +138,18 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
         return;
       }
 
+      // Loan — redirect to dedicated loan page
+      if (aType === "apply_loan") {
+        const msg = result.confirmation_message || "Taking you to GOpinjam Loan.";
+        setMessages(prev => [...prev, { role: "assistant", content: msg }]);
+        await speak(msg, result.detected_language || language);
+        onAction({ actionType: "apply_loan", fields: result.fields, confirmMsg: msg });
+        setPanelState("pill"); setPillText("Opening GOpinjam...");
+        setTimeout(() => { setPanelState("hidden"); onClose(); }, 2000);
+        setProcessing(false);
+        return;
+      }
+
       // Unknown
       if (aType === "unknown" && !result.confirmation_message) {
         const msg = "I didn't catch that. Could you tell me what you'd like to do? For example: send money, pay bills, or check balance.";
