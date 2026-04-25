@@ -31,16 +31,24 @@ FormBuddy lives inside the TNG app as a floating mic button. Users speak natural
 3. **Confirms action** — "Pay RM50 for RON95 fuel? Confirm with Face ID"
 4. **Executes** — triggers the TNG payment flow
 
-### Supported Actions (Demo)
+### Supported Actions (14 — Demo Ready)
 
-| Action | Example Speech | What Happens |
-|--------|---------------|-------------|
-| **Fund Transfer** | "Send duit to Ahmad seratus ringgit" | Transfer confirmation → biometric → done |
-| **Bill Payment** | "Pay my TNB bill lah" | Bill lookup → amount confirm → pay |
-| **Fuel Payment** | "Nak pump RON95 lima puluh" | Fuel payment → station select → pay |
-| **Prepaid Reload** | "Top up phone aku tiga puluh" | Carrier detect → reload → done |
-| **Loan Application** | "I want apply micro loan" | Form fill by voice → submit |
-| **Check Balance** | "Baki aku berapa?" | Show balance (mock) |
+| # | Action | action_type | Example Speech | What Happens |
+|---|--------|-------------|---------------|-------------|
+| 1 | **Fund Transfer** | `form_fill` / `fund_transfer` | "Send duit to Ahmad seratus ringgit" | Transfer → biometric → done |
+| 2 | **Bill Payment** | `bill_payment` | "Pay my TNB bill lah" | Bill lookup → amount → pay |
+| 3 | **Fuel Payment** | `fuel_payment` | "Nak pump RON95 lima puluh" | Station → fuel type → pay |
+| 4 | **Prepaid Reload** | `pin_reload` | "Top up phone aku tiga puluh" | Carrier → reload → done |
+| 5 | **Scan & Pay** | `scan_pay` | "Scan bayar kedai mamak" | Merchant → amount → pay |
+| 6 | **Check Balance** | `check_balance` | "Baki aku berapa?" | Show balance (instant) |
+| 7 | **Toll / RFID** | `pay_toll` | "Top up RFID lima puluh" | Vehicle → amount → pay |
+| 8 | **Parking** | `pay_parking` | "Pay parking satu jam" | Location → duration → pay |
+| 9 | **Insurance** | `buy_insurance` | "Nak beli travel insurance" | Type → coverage → purchase |
+| 10 | **GOpinjam Loan** | `apply_loan` | "I want apply micro loan" | Amount → tenure → submit |
+| 11 | **GO+ Investment** | `invest` | "Invest seratus ringgit GO+" | Amount → product → confirm |
+| 12 | **Buy Ticket** | `buy_ticket` | "Book movie ticket tonight" | Type → date → book |
+| 13 | **Food Delivery** | `food_delivery` | "Order nasi lemak nearby" | Restaurant → items → order |
+| 14 | **Donation** | `donate` | "Derma sepuluh ringgit" | Organization → amount → donate |
 
 ### User Flow
 ```
@@ -76,8 +84,11 @@ FormBuddy lives inside the TNG app as a floating mic button. Users speak natural
 │  │ /api/v1/voice/detect-intent — Smart agent      │  │
 │  │   └─ Bedrock tool_use (schema-enforced JSON)   │  │
 │  │   └─ Retry logic (1 retry on failure)          │  │
-│  │   └─ Actions: form_fill, fuel_payment,         │  │
-│  │      check_balance, scan_pay, pin_reload       │  │
+│  │   └─ 14 actions: fuel_payment, form_fill,      │  │
+│  │      check_balance, scan_pay, pin_reload,      │  │
+│  │      pay_toll, pay_parking, buy_insurance,     │  │
+│  │      apply_loan, invest, buy_ticket,           │  │
+│  │      food_delivery, donate                     │  │
 │  │ /api/v1/voice/sessions— Session management     │  │
 │  │ /api/v1/dashboard/stats— Completion metrics    │  │
 │  └────────────────────────┬───────────────────────┘  │

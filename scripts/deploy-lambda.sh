@@ -1,6 +1,12 @@
 #!/bin/bash
-# Deploy backend to AWS Lambda
+# Deploy backend to AWS Lambda via S3 upload
+# Direct zip upload fails for packages >50MB (connection closes)
 set -e
+
+FUNCTION_NAME="finhack-backend-dev"
+S3_BUCKET="finhack-frontend-dev"
+S3_KEY="lambda.zip"
+REGION="ap-southeast-1"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKEND_DIR="$SCRIPT_DIR/../backend"
@@ -26,16 +32,18 @@ cp -r "$BACKEND_DIR/services" "$BUILD_DIR/"
 cd "$BUILD_DIR"
 zip -r "$BACKEND_DIR/lambda.zip" . -q
 
-echo "✅ lambda.zip created ($(du -h "$BACKEND_DIR/lambda.zip" | cut -f1))"
+SIZE=$(du -h "$BACKEND_DIR/lambda.zip" | cut -f1)
+echo "✅ lambda.zip created ($SIZE)"
 
-# Deploy if function exists
-if aws lambda get-function --function-name formbuddy-backend-dev 2>/dev/null; then
-    echo "🚀 Deploying to Lambda..."
-    aws lambda update-function-code \
-        --function-name formbuddy-backend-dev \
-        --zip-file "fileb://$BACKEND_DIR/lambda.zip" \
-        --region ap-southeast-1
-    echo "✅ Deployed!"
-else
-    echo "ℹ️  Lambda function doesn't exist yet. Run 'terraform apply' first, or create manually."
-fi
+# Deploy via S3 (primary — required for packages >50MB)
+echo "🚀 Uploading to S3..."
+aws s3 cp "$BACKEND_DIR/lambda.zip" "s3://$S3_BUCKET/$S3_KEY" --region "$REGION"
+
+echo "🚀 Updating Lambda..."
+aws lambda update-function-code \
+    --function-name "$FUNCTION_NAME" \
+    --s3-bucket "$S3_BUCKET" \
+    --s3-key "$S3_KEY" \
+    --region "$REGION"
+
+echo "✅ Deployed $FUNCTION_NAME ($SIZE via S3)"

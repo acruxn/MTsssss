@@ -53,7 +53,7 @@ class ExtractedFields(BaseModel):
 
 
 class DetectIntentResponse(BaseModel):
-    action_type: str  # "form_fill", "fuel_payment", "check_balance", "scan_pay", "pin_reload", "unknown"
+    action_type: str  # form_fill, fuel_payment, check_balance, scan_pay, pin_reload, pay_toll, pay_parking, buy_insurance, apply_loan, invest, buy_ticket, food_delivery, donate, unknown
     template_id: Optional[int] = None
     template_name: Optional[str] = None
     action_label: Optional[str] = None

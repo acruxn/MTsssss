@@ -23,6 +23,15 @@ const ACTION_META: Record<string, { emoji: string; label: string }> = {
   prepaid_reload: { emoji: "📱", label: "Prepaid Reload" },
   check_balance: { emoji: "💰", label: "Check Balance" },
   scan_pay: { emoji: "📷", label: "Scan & Pay" },
+  pin_reload: { emoji: "📱", label: "Prepaid Reload" },
+  pay_toll: { emoji: "🛣️", label: "Toll Payment" },
+  pay_parking: { emoji: "🅿️", label: "Parking Payment" },
+  buy_insurance: { emoji: "🛡️", label: "Insurance" },
+  apply_loan: { emoji: "💳", label: "GOpinjam Loan" },
+  invest: { emoji: "📈", label: "GO+ Investment" },
+  buy_ticket: { emoji: "🎫", label: "Buy Ticket" },
+  food_delivery: { emoji: "🍔", label: "Food Delivery" },
+  donate: { emoji: "❤️", label: "Donation" },
   form_fill: { emoji: "📋", label: "Form Fill" },
 };
 
@@ -171,7 +180,7 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
             <button onClick={handleStart} className="mic-pulse relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-[#0066FF] hover:bg-[#0052CC] transition-all flex items-center justify-center shadow-xl shadow-[#0066FF]/25 active:scale-95" aria-label="Start voice recording">{MicSvg}</button>
           </div>
           <p className="text-[#64748B] text-sm font-medium mb-2">Tap to speak</p>
-          {!templateParam && !actionParam && <button onClick={() => onNavigate("/templates")} className="text-xs text-[#0066FF] hover:underline mt-1">or browse templates →</button>}
+          {!templateParam && !actionParam && <button onClick={() => onNavigate("/services")} className="text-xs text-[#0066FF] hover:underline mt-1">or browse services →</button>}
         </div>
       )}
 

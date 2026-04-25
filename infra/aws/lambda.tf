@@ -3,7 +3,7 @@ resource "aws_lambda_function" "backend" {
   function_name = "${var.project_name}-backend-${var.environment}"
   runtime       = "python3.12"
   handler       = "main.handler"
-  timeout       = 30
+  timeout       = 60
   memory_size   = 512
 
   filename         = "${path.module}/../backend/lambda.zip"
@@ -60,18 +60,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Function URL (simpler than API Gateway for hackathon)
-resource "aws_lambda_function_url" "backend" {
-  function_name      = aws_lambda_function.backend.function_name
-  authorization_type = "NONE"
-
-  cors {
-    allow_origins = ["*"]
-    allow_methods = ["*"]
-    allow_headers = ["*"]
-  }
-}
-
-output "backend_url" {
-  value = aws_lambda_function_url.backend.function_url
-}
+# Note: API Gateway HTTP API (w6qtfxl2va / formbuddy-api) was created via CLI.
+# Lambda Function URL was blocked by org SCP (Decision D11).
+# To import API Gateway into Terraform state post-hackathon:
+#   terraform import aws_apigatewayv2_api.backend w6qtfxl2va
