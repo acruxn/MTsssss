@@ -1,27 +1,24 @@
-# OceanBase on Alibaba Cloud
-# Note: OceanBase Cloud may require manual setup via console
-# This provisions the VPC and security group for connectivity
+# OceanBase on Alibaba Cloud — ap-southeast-3 (Malaysia/KL)
 
-resource "alicloud_vpc" "main" {
-  vpc_name   = "${var.project_name}-vpc-${var.environment}"
-  cidr_block = "172.16.0.0/16"
+data "alicloud_zones" "ob_zones" {
+  available_resource_creation = "VSwitch"
 }
 
-resource "alicloud_vswitch" "main" {
-  vpc_id     = alicloud_vpc.main.id
-  cidr_block = "172.16.0.0/24"
-  zone_id    = "${var.alicloud_region}a"
+resource "alicloud_ocean_base_instance" "formbuddy" {
+  instance_name  = "${var.project_name}-oceanbase-${var.environment}"
+  series         = "normal"
+  instance_class = "4C16G"
+  disk_size      = 100
+  disk_type      = "cloud_essd_pl1"
+  payment_type   = "PayAsYouGo"
+
+  zones = [
+    "ap-southeast-3a",
+  ]
+
+  backup_retain_mode = "delete_all"
 }
 
-resource "alicloud_security_group" "db" {
-  security_group_name = "${var.project_name}-db-sg-${var.environment}"
-  vpc_id              = alicloud_vpc.main.id
-}
-
-resource "alicloud_security_group_rule" "db_mysql" {
-  type              = "ingress"
-  ip_protocol       = "tcp"
-  port_range        = "2881/2881"
-  security_group_id = alicloud_security_group.db.id
-  cidr_ip           = "0.0.0.0/0" # Restrict in production
+output "oceanbase_instance_id" {
+  value = alicloud_ocean_base_instance.formbuddy.id
 }
