@@ -18,7 +18,7 @@ export default function App() {
   return (
     <Layout currentPath={basePath} onNavigate={navigate} language={language} onLanguageChange={(l: string) => { setLanguage(l); localStorage.setItem("formbuddy-lang", l); }}>
       {basePath === "/" && <Dashboard />}
-      {basePath === "/templates" && <FormTemplates onNavigate={navigate} />}
+      {basePath === "/templates" && <FormTemplates onNavigate={navigate} language={language} />}
       {basePath === "/voice" && <VoiceAssistant onNavigate={navigate} language={language} />}
     </Layout>
   );
