@@ -10,7 +10,7 @@ from models.transaction import FormTemplate
 from models.alert import VoiceSession
 from schemas.transaction import (
     VoiceSessionCreate, VoiceSessionResponse, VoiceInput,
-    ExtractedFields, FieldDefinition,
+    ExtractedFields, FieldDefinition, DetectIntentResponse,
 )
 from services.fraud_service import FormService
 from services.ai_service import AIService
@@ -21,13 +21,13 @@ form_service = FormService()
 ai = AIService()
 
 
-@router.post("/detect-intent")
+@router.post("/detect-intent", response_model=DetectIntentResponse)
 async def detect_intent(
     transcript: str = Body(..., embed=True),
     language: str = Body("en", embed=True),
     db: Session = Depends(get_db),
 ):
-    """Detect user intent from free speech, match to a form template, and extract fields."""
+    """Detect user intent from free speech — returns form template match or quick action."""
     templates = db.query(FormTemplate).all()
     template_list = [
         {"id": t.id, "name": t.name, "category": t.category, "fields": json.loads(t.fields)}

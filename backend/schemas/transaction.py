@@ -52,6 +52,16 @@ class ExtractedFields(BaseModel):
     ai_source: str  # qwen, bedrock, both
 
 
+class DetectIntentResponse(BaseModel):
+    action_type: str  # "form_fill", "fuel_payment", "check_balance", "scan_pay", "pin_reload", "unknown"
+    template_id: Optional[int] = None
+    template_name: Optional[str] = None
+    action_label: Optional[str] = None
+    fields: Dict[str, Optional[Any]] = {}
+    confidence: float = 0.0
+    confirmation_message: Optional[str] = None
+
+
 class VoiceSessionResponse(BaseModel):
     id: int
     user_id: int

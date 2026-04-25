@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Optional
+from typing import Dict, List, Optional
 
 from openai import OpenAI
 
@@ -94,7 +94,7 @@ class AIService:
 
         # Merge fields — prefer Qwen, fill gaps with Bedrock
         merged_fields: dict = {}
-        confidence_scores: list[float] = []
+        confidence_scores: List[float] = []
 
         for result in [qwen_result, bedrock_result]:
             if not result:
@@ -113,21 +113,40 @@ class AIService:
         }
 
 
-    async def detect_intent(self, transcript: str, templates: list, language: str) -> dict:
-        """Identify which form template matches and extract fields."""
+    async def detect_intent(self, transcript: str, templates: list, language: str) -> Dict:
+        """Detect user intent: form template match OR quick action."""
         template_desc = "\n".join(
             f"- Template '{t['name']}' (id={t['id']}, category={t['category']}): fields={[f['name'] for f in t['fields']]}"
             for t in templates
         )
         prompt = (
-            f"You are FormBuddy. A user said: \"{transcript}\" (language: {language})\n\n"
+            f"You are FormBuddy, a TNG eWallet AI assistant. A user said: \"{transcript}\" (language: {language})\n\n"
             f"Available form templates:\n{template_desc}\n\n"
-            f"1. Identify which template best matches the user's intent.\n"
-            f"2. Extract any field values mentioned in the transcript.\n"
-            f"Return JSON: {{\"template_id\": <int>, \"template_name\": <str>, \"fields\": {{<field_name>: <value>}}, \"confidence\": <0.0-1.0>}}"
+            f"Quick actions (no form needed):\n"
+            f"- \"fuel_payment\": pay for fuel (params: fuel_type, amount, station)\n"
+            f"- \"check_balance\": check eWallet balance (no params)\n"
+            f"- \"scan_pay\": scan and pay merchant (params: merchant, amount)\n"
+            f"- \"pin_reload\": reload prepaid (params: phone, amount, carrier)\n\n"
+            f"Determine if the user wants a form template or a quick action.\n"
+            f"Extract any parameter values mentioned.\n"
+            f"Generate a short confirmation_message summarizing what the user wants.\n\n"
+            f"Return JSON: {{\"action_type\": \"form_fill|fuel_payment|check_balance|scan_pay|pin_reload|unknown\", "
+            f"\"template_id\": <int or null>, \"template_name\": <str or null>, "
+            f"\"action_label\": <human-readable label>, "
+            f"\"fields\": {{<param>: <value>}}, \"confidence\": <0.0-1.0>, "
+            f"\"confirmation_message\": <short confirmation string>}}"
         )
         raw = await self.ask_bedrock(prompt)
-        return _parse_json(raw) if raw else {"template_id": None, "fields": {}, "confidence": 0}
+        result = _parse_json(raw) if raw else {}
+        return {
+            "action_type": result.get("action_type", "unknown"),
+            "template_id": result.get("template_id"),
+            "template_name": result.get("template_name"),
+            "action_label": result.get("action_label"),
+            "fields": result.get("fields", {}),
+            "confidence": float(result.get("confidence", 0)),
+            "confirmation_message": result.get("confirmation_message"),
+        }
 
 
 def _parse_json(text: str) -> Optional[dict]:
