@@ -303,7 +303,7 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
 
   // Pill state
   if (panelState === "pill") return (
-    <div className="absolute bottom-20 left-4 right-4 z-50 bg-[#0066FF] text-white rounded-full px-5 py-3 flex items-center gap-3 shadow-lg animate-fadeIn">
+    <div className="absolute bottom-20 left-4 right-4 z-50 bg-gradient-to-r from-[#0066FF] to-[#0044CC] text-white rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-xl shadow-blue-500/25 animate-fadeIn">
       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
       <span className="text-sm font-medium">{pillText}</span>
     </div>
@@ -324,23 +324,31 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#0066FF] flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0066FF] to-[#0044CC] flex items-center justify-center shadow-sm">
+              <svg className="w-[18px] h-[18px] text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
             </div>
-            <span className="text-sm font-bold text-[#1E293B]">FormBuddy</span>
-            <span className="text-[10px] bg-blue-50 text-[#0066FF] px-2 py-0.5 rounded-full font-medium">{LANG_LABELS[language] || "EN"}</span>
+            <div>
+              <span className="text-sm font-bold text-[#1E293B] block leading-tight">FormBuddy</span>
+              <span className="text-[10px] text-[#94A3B8]">AI Assistant</span>
+            </div>
+            <span className="text-[10px] bg-blue-50 text-[#0066FF] px-2 py-0.5 rounded-full font-medium ml-1">{LANG_LABELS[language] || "EN"}</span>
           </div>
-          <button onClick={handleClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          <button onClick={handleClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
 
         {/* Messages */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
           {messages.map((m, i) => (
-            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${m.role === "user" ? "bg-[#0066FF] text-white rounded-br-md" : "bg-[#F1F5F9] text-[#1E293B] rounded-bl-md"}`}>
+            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} gap-2`}>
+              {m.role === "assistant" && (
+                <div className="w-6 h-6 rounded-full bg-[#0066FF] flex items-center justify-center shrink-0 mt-1">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                </div>
+              )}
+              <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-line ${m.role === "user" ? "bg-[#0066FF] text-white rounded-br-sm" : "bg-[#F1F5F9] text-[#1E293B] rounded-bl-sm"}`}>
                 {m.content}
               </div>
             </div>
@@ -390,7 +398,7 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
         </div>
 
         {/* Input bar */}
-        <div className="border-t border-gray-100 px-3 py-2.5 flex items-center gap-2">
+        <div className="border-t border-gray-100 px-3 py-2.5 flex items-center gap-2 bg-white">
           <input
             type="text"
             value={recording ? transcript || "Listening..." : input}
@@ -398,21 +406,21 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
             onKeyDown={e => { if (e.key === "Enter") handleSend(); }}
             placeholder="Type a message..."
             readOnly={recording}
-            className={`flex-1 bg-[#F1F5F9] rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066FF]/20 ${recording ? "text-red-500 italic" : "text-[#1E293B]"}`}
+            className={`flex-1 bg-[#F8FAFC] rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066FF]/20 border border-transparent focus:border-[#0066FF]/30 ${recording ? "text-red-500 italic border-red-200 bg-red-50/50" : "text-[#1E293B]"}`}
           />
           <button
             onClick={toggleMic}
-            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${recording ? "bg-red-500" : "bg-[#F1F5F9]"}`}
+            className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all ${recording ? "bg-red-500 shadow-lg shadow-red-500/30 animate-pulse" : "bg-[#0066FF] shadow-md shadow-blue-500/20 hover:shadow-lg"}`}
             aria-label={recording ? "Stop recording" : "Start recording"}
           >
             {recording ? (
               <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
             ) : (
-              <svg className="w-5 h-5 text-[#0066FF]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
             )}
           </button>
           {!recording && input.trim() && (
-            <button onClick={handleSend} className="w-10 h-10 rounded-full bg-[#0066FF] flex items-center justify-center shrink-0">
+            <button onClick={handleSend} className="w-11 h-11 rounded-full bg-[#0066FF] flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
           )}

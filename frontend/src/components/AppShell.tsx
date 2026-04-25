@@ -224,11 +224,10 @@ export default function AppShell({
   const floatingMic = (
     <button
       onClick={() => setChatOpen(prev => !prev)}
-      className="absolute bottom-20 right-4 z-40 w-14 h-14 rounded-full flex items-center justify-center shadow-lg mic-pulse active:scale-90 transition-transform"
-      style={{ background: "#0066FF" }}
+      className="absolute bottom-20 right-4 z-40 w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-blue-500/30 active:scale-90 transition-all bg-gradient-to-br from-[#0066FF] to-[#0044CC] hover:shadow-2xl hover:shadow-blue-500/40"
       aria-label="Open FormBuddy"
     >
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
     </button>
   );
 

@@ -20,10 +20,10 @@ const CATEGORIES: { title: string; items: ServiceItem[] }[] = [
     { icon: <I d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM17.5 14v7M14 17.5h7" c="#0066FF" />, label: "Scan & Pay", desc: "Scan QR to pay merchants", action: "scan_pay" },
     { icon: <I d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" />, label: "Pay Bills", desc: "Utilities, telco, broadband", action: "bill_payment" },
     { icon: <I d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z M4 22v-7" />, label: "Toll", desc: "Highway toll payments", action: "pay_toll" },
-    { icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth={1.8}><rect x="3" y="3" width="18" height="18" rx="3" /><text x="12" y="16" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#6B7280" stroke="none">P</text></svg>, label: "Parking", desc: "Street & mall parking", action: "pay_parking" },
+    { icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M6 20V4h6a4 4 0 010 8H6" /></svg>, label: "Parking", desc: "Street & mall parking", action: "pay_parking" },
   ]},
   { title: "Money", items: [
-    { icon: <I d="M5 12h14 M13 6l6 6-6 6" c="#0066FF" />, label: "Transfer", desc: "Send money to anyone", action: "fund_transfer" },
+    { icon: <img src="/tng/fund_icon_duit_now.svg" alt="" className="w-5 h-5" />, label: "Transfer", desc: "Send money to anyone", action: "fund_transfer" },
     { icon: <I d="M19 12H5 M11 18l-6-6 6-6" />, label: "Request Money", desc: "Ask friends to pay you", action: "request_money", soon: true },
     { icon: <I d="M12 2v20 M2 12h20" />, label: "Split Bill", desc: "Divide expenses easily", action: "split_bill", soon: true },
   ]},
