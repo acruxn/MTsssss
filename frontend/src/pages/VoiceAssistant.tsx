@@ -8,6 +8,7 @@ import {
   type VoiceSession,
   type ExtractedFields,
 } from "../lib/api";
+import { speak, stopSpeaking } from "../lib/speech";
 
 interface SpeechRecognitionEvent {
   results: { [index: number]: { [index: number]: { transcript: string } }; length: number };
@@ -39,6 +40,25 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
   useEffect(() => {
     if (templateId) getTemplate(templateId).then(setTemplate).catch(() => {});
   }, [templateId]);
+
+  useEffect(() => {
+    if (template && phase === "idle") {
+      const fieldNames = template.fields.map(f => f.label).join(", ");
+      speak(`Please tell me your ${fieldNames}`, language || "en");
+    }
+    return () => stopSpeaking();
+  }, [template, phase]);
+
+  useEffect(() => {
+    if (phase === "confirm" && template) {
+      const readback = template.fields
+        .filter(f => extracted[f.name])
+        .map(f => `${f.label}: ${extracted[f.name]}`)
+        .join(". ");
+      if (readback) speak(readback, language || "en");
+    }
+    return () => stopSpeaking();
+  }, [phase]);
 
   function startRecognition() {
     const SR =
@@ -85,12 +105,14 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
   }
 
   function handleStartListening() {
+    stopSpeaking();
     setError("");
     setPhase("listening");
     startRecognition();
   }
 
   function handleCancel() {
+    stopSpeaking();
     stopRecognition();
     setTranscript("");
     setPhase("idle");
@@ -141,6 +163,7 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
   }
 
   function handleReset() {
+    stopSpeaking();
     setPhase("idle");
     setSession(null);
     setTranscript("");
@@ -288,6 +311,18 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
               className="flex-1 bg-green-600 hover:bg-green-500 text-white rounded-lg py-3 font-medium transition-colors"
             >
               ✓ Submit
+            </button>
+            <button
+              onClick={() => {
+                const readback = template?.fields
+                  .filter(f => extracted[f.name])
+                  .map(f => `${f.label}: ${extracted[f.name]}`)
+                  .join(". ");
+                if (readback) speak(readback, language || "en");
+              }}
+              className="bg-purple-600 hover:bg-purple-500 text-white rounded-lg py-3 px-4 font-medium transition-colors"
+            >
+              🔊 Read Back
             </button>
             <button
               onClick={handleSpeakAgain}
