@@ -1,4 +1,5 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+import { getAccounts, switchAccount, resetAccounts, type DemoAccount } from "../lib/api";
 
 /* ── Tab SVG Icons (matching TNG's outlined style) ── */
 const HomeIcon = ({ active }: { active: boolean }) => (
@@ -82,15 +83,58 @@ export default function AppShell({
   onLanguageChange: (lang: string) => void;
 }) {
   const [langOpen, setLangOpen] = useState(false);
+  const [acctOpen, setAcctOpen] = useState(false);
+  const [accounts, setAccounts] = useState<DemoAccount[]>([]);
+  const [activeUser, setActiveUser] = useState("Ahmad Razak");
   const basePath = currentPath.split("?")[0];
+
+  useEffect(() => {
+    getAccounts().then((a) => { setAccounts(a); const active = a.find(x => x.active); if (active) setActiveUser(active.name); }).catch(() => {});
+  }, []);
+
+  async function handleSwitch(id: number) {
+    const r = await switchAccount(id).catch(() => null);
+    if (r) { setActiveUser(r.name); onLanguageChange(r.language); }
+    setAcctOpen(false);
+    setAccounts(prev => prev.map(a => ({ ...a, active: a.id === id })));
+    onNavigate("/");
+  }
+
+  async function handleReset() {
+    await resetAccounts().catch(() => {});
+    setAcctOpen(false);
+    onNavigate("/");
+  }
 
   const statusBar = (
     <div className="flex items-center justify-between px-5 h-11 bg-white border-b border-gray-100 select-none">
       <span className="text-sm font-bold text-[#0066FF] tracking-tight">TNG eWallet</span>
       <div className="flex items-center gap-2">
+        {/* Account switcher */}
+        <div className="relative">
+          <button onClick={() => { setAcctOpen(!acctOpen); setLangOpen(false); }} className="text-[10px] font-semibold text-gray-500 bg-gray-100 rounded-full px-2 py-0.5 hover:bg-blue-50 hover:text-[#0066FF] transition-colors truncate max-w-[80px]">
+            {activeUser.split(" ")[0]}
+          </button>
+          {acctOpen && (
+            <div className="absolute right-0 top-7 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 min-w-[180px]">
+              {accounts.map((a) => (
+                <button key={a.id} onClick={() => handleSwitch(a.id)} className={`block w-full text-left px-3 py-2 text-xs hover:bg-blue-50 ${a.active ? "text-[#0066FF] font-semibold bg-blue-50/50" : "text-gray-700"}`}>
+                  <div className="flex justify-between items-center">
+                    <span>{a.name}</span>
+                    <span className="text-[10px] text-gray-400">RM {a.balance.toFixed(2)}</span>
+                  </div>
+                  <span className="text-[10px] text-gray-400">{a.phone} · {a.language.toUpperCase()}</span>
+                </button>
+              ))}
+              <div className="border-t border-gray-100 mt-1 pt-1">
+                <button onClick={handleReset} className="block w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-50">Reset all accounts</button>
+              </div>
+            </div>
+          )}
+        </div>
         <div className="relative">
           <button
-            onClick={() => setLangOpen(!langOpen)}
+            onClick={() => { setLangOpen(!langOpen); setAcctOpen(false); }}
             className="text-sm text-gray-500 hover:text-[#0066FF] transition-colors"
             aria-label="Change language"
           >

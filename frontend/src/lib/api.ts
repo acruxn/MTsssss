@@ -98,6 +98,12 @@ export interface PaymentTransaction { id: number; type: string; amount: number; 
 export interface TransferResult { success: boolean; balance: number; transaction_id: number | null; warnings: string[]; message: string; }
 export interface PayResult { success: boolean; balance: number; transaction_id: number | null; message: string; }
 
+export interface DemoAccount { id: number; name: string; phone: string; language: string; balance: number; active: boolean; }
+
+export const getAccounts = () => request<DemoAccount[]>("/user/accounts");
+export const switchAccount = (userId: number) => request<{ id: number; name: string; balance: number; language: string }>(`/user/switch?user_id=${userId}`, { method: "POST" });
+export const resetAccounts = () => request<{ balance: number; message: string }>("/user/reset", { method: "POST" });
+
 export const getBalance = () => request<BalanceInfo>("/user/balance");
 export const getTransactions = () => request<PaymentTransaction[]>("/user/transactions");
 export const postTransfer = (recipient: string, amount: number, reference: string = "") =>

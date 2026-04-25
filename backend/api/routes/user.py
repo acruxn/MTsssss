@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from core.database import get_db
@@ -15,13 +15,14 @@ from schemas.transaction import (
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/user", tags=["User"])
 
-DEMO_USER_ID = 1
+# Mutable demo user — switchable via /switch endpoint
+_active_user_id = 1
 
 
-def _get_demo_user(db: Session) -> User:
-    user = db.query(User).filter(User.id == DEMO_USER_ID).first()
+def _get_user(db: Session) -> User:
+    user = db.query(User).filter(User.id == _active_user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="Demo user not found")
+        raise HTTPException(status_code=404, detail="User not found")
     return user
 
 
@@ -41,19 +42,38 @@ def _fraud_checks(amount: float, user: User, recipient: str, db: Session) -> Lis
     return warnings
 
 
+@router.get("/accounts")
+async def list_accounts(db: Session = Depends(get_db)):
+    """List all demo accounts for switcher."""
+    users = db.query(User).all()
+    return [
+        {"id": u.id, "name": u.name, "phone": u.phone, "language": u.preferred_language, "balance": u.balance, "active": u.id == _active_user_id}
+        for u in users
+    ]
+
+
+@router.post("/switch")
+async def switch_account(user_id: int = Query(...), db: Session = Depends(get_db)):
+    """Switch active demo account."""
+    global _active_user_id
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    _active_user_id = user_id
+    return {"id": user.id, "name": user.name, "balance": user.balance, "language": user.preferred_language}
+
+
 @router.get("/balance", response_model=BalanceResponse)
 async def get_balance(db: Session = Depends(get_db)):
-    """Get demo user balance."""
-    user = _get_demo_user(db)
+    user = _get_user(db)
     return {"balance": user.balance, "name": user.name}
 
 
 @router.get("/transactions", response_model=List[TransactionResponse])
 async def get_transactions(limit: int = 20, db: Session = Depends(get_db)):
-    """Get recent transactions for demo user."""
     txns = (
         db.query(Transaction)
-        .filter(Transaction.user_id == DEMO_USER_ID)
+        .filter(Transaction.user_id == _active_user_id)
         .order_by(Transaction.created_at.desc())
         .limit(limit)
         .all()
@@ -63,15 +83,12 @@ async def get_transactions(limit: int = 20, db: Session = Depends(get_db)):
 
 @router.post("/transfer", response_model=TransferResponse)
 async def transfer(payload: TransferRequest, db: Session = Depends(get_db)):
-    """Transfer money with fraud checks."""
     if payload.amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be positive")
-    user = _get_demo_user(db)
+    user = _get_user(db)
     if payload.amount > user.balance:
         raise HTTPException(status_code=400, detail="Insufficient funds")
-
     warnings = _fraud_checks(payload.amount, user, payload.recipient, db)
-
     user.balance -= payload.amount
     txn = Transaction(
         user_id=user.id, type="transfer", amount=-payload.amount,
@@ -80,7 +97,6 @@ async def transfer(payload: TransferRequest, db: Session = Depends(get_db)):
     db.add(txn)
     db.commit()
     db.refresh(txn)
-
     return {
         "success": True, "balance": user.balance, "transaction_id": txn.id,
         "warnings": warnings, "message": f"Transferred RM{payload.amount:.2f} to {payload.recipient}",
@@ -89,15 +105,12 @@ async def transfer(payload: TransferRequest, db: Session = Depends(get_db)):
 
 @router.post("/pay", response_model=TransferResponse)
 async def pay(payload: PaymentRequest, db: Session = Depends(get_db)):
-    """Generic payment (fuel, reload, bill)."""
     if payload.amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be positive")
-    user = _get_demo_user(db)
+    user = _get_user(db)
     if payload.amount > user.balance:
         raise HTTPException(status_code=400, detail="Insufficient funds")
-
     warnings = _fraud_checks(payload.amount, user, "", db)
-
     user.balance -= payload.amount
     txn = Transaction(
         user_id=user.id, type=payload.type, amount=-payload.amount,
@@ -106,7 +119,6 @@ async def pay(payload: PaymentRequest, db: Session = Depends(get_db)):
     db.add(txn)
     db.commit()
     db.refresh(txn)
-
     return {
         "success": True, "balance": user.balance, "transaction_id": txn.id,
         "warnings": warnings, "message": f"Payment of RM{payload.amount:.2f} ({payload.type}) successful",
@@ -115,11 +127,10 @@ async def pay(payload: PaymentRequest, db: Session = Depends(get_db)):
 
 @router.post("/reset")
 async def reset_demo(db: Session = Depends(get_db)):
-    """Reset demo user balance and clear transactions."""
-    user = db.query(User).filter(User.id == DEMO_USER_ID).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Demo user not found")
-    user.balance = 1234.56
-    db.query(Transaction).filter(Transaction.user_id == DEMO_USER_ID).delete()
+    """Reset ALL demo users and clear all transactions."""
+    users = db.query(User).all()
+    for u in users:
+        u.balance = 1234.56
+    db.query(Transaction).delete()
     db.commit()
-    return {"balance": 1234.56, "message": "Demo reset complete"}
+    return {"balance": 1234.56, "message": "All accounts reset to RM1,234.56"}
