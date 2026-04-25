@@ -1,7 +1,7 @@
 # FormBuddy — Project Master Plan
 ## TNG Digital FinHack 2026 | Track 1: Financial Inclusion
 
-> Single source of truth. Last updated: 25 Apr 2026, 2:35 PM MYT
+> Single source of truth. Last updated: 25 Apr 2026, 3:50 PM MYT
 
 ---
 
@@ -256,6 +256,9 @@ Deploy:   ./scripts/deploy-lambda.sh
 | D3 | Mate's "VoiceBridge" docs (docs/note-from-mate/) are reference only | Different product name, different tech stack (Flutter, ApsaraDB, SageMaker, Cognito). Our MASTER_PLAN.md is the single source of truth. Reuse their pitch narrative and market stats for demo day. | 25 Apr 2026 |
 | D4 | Build our MVP first, adopt mate's vision post-hackathon | React web → Flutter mobile, Web Speech API → Transcribe, Lambda → ECS are all natural migration paths. Core backend (FastAPI + Bedrock + OceanBase) stays the same. | 25 Apr 2026 |
 | D5 | Python 3.9 compat required | Dev machine runs 3.9.6 — no `X | Y` union syntax, use `Optional[X]` and `List[X]` | 25 Apr 2026 |
+| D6 | Bedrock returns JSON in markdown fences | Added fence-stripping to _parse_json in ai_service.py | 25 Apr 2026 |
+| D7 | ExtractedFields allows Any type, not just str | Bedrock returns int for amounts — schema changed to Dict[str, Optional[Any]] | 25 Apr 2026 |
+| D8 | Adapted mate's VoiceBridge pitch deck to FormBuddy | Changed product name, swapped tech stack badges to match our actual stack | 25 Apr 2026 |
 
 ---
 
@@ -274,35 +277,35 @@ Deploy:   ./scripts/deploy-lambda.sh
 - [x] Database running (Docker MySQL on localhost:3306)
 
 ### Phase 1 — STILL PENDING
-- [ ] Refresh AWS STS credentials and re-test Bedrock
+- [x] Refresh AWS STS credentials and re-test Bedrock — WORKING
 - [ ] Refresh Alibaba STS credentials and attempt OceanBase creation
-- [ ] Seed demo data (`python scripts/seed.py`)
-- [ ] Run backend + frontend together, test end-to-end
+- [x] Seed demo data (5 users, 9 templates, 10 sessions)
+- [x] Run backend + frontend together — e2e verified, Bedrock extracts fields correctly
 
-### Phase 2: Core Voice Flow (2-3 hours)
-- [ ] Wire VoiceAssistant → backend /voice/extract → Bedrock → form fill
-- [ ] Voice readback via browser TTS
-- [ ] Confirm/reject flow
-- [ ] Test end-to-end: speak English → extract → fill → readback
+### Phase 2: Core Voice Flow ✅ DONE
+- [x] Wire VoiceAssistant → backend /voice/extract → Bedrock → form fill
+- [x] Voice readback via browser TTS
+- [x] Confirm/reject flow
+- [x] Test end-to-end: speak English → extract → fill → readback
 
-### Phase 3: Multi-Language (1-2 hours)
-- [ ] Language selector in UI
-- [ ] Test BM voice → BM extraction → BM readback
-- [ ] Seed templates in BM + EN minimum
+### Phase 3: Multi-Language ✅ DONE
+- [x] Language selector in UI
+- [x] Test BM voice → BM extraction → BM readback
+- [x] Seed templates in BM + EN minimum
 
-### Phase 4: Frontend Polish (2-3 hours)
-- [ ] shadcn/ui (run `npx shadcn@latest init` — interactive)
-- [ ] Hero VoiceAssistant page — large mic, animations
-- [ ] Mobile-responsive
-- [ ] Form field fill animation
+### Phase 4: Frontend Polish ✅ DONE
+- [x] Gradient theme, mic-pulse animation, hero banner
+- [x] Hero VoiceAssistant page — large mic, animations
+- [x] Mobile-responsive
+- [x] Form field fill animation
 
-### Phase 5: Infrastructure (parallel)
-- [ ] Create OceanBase instance (Alibaba console) or use local MySQL
-- [ ] Deploy Lambda (`./scripts/deploy-lambda.sh`)
+### Phase 5: Infrastructure ⏳ PARTIAL
+- [x] Local MySQL running (OceanBase pending — Alibaba STS malformed)
+- [x] Lambda packaged (23MB zip)
 - [ ] Deploy frontend to S3 (optional)
 - [ ] `terraform init && terraform plan` (show IaC exists)
 
-### Phase 6: Demo Prep (last 6 hours)
+### Phase 6: Demo Prep ⏳ IN PROGRESS
 - [ ] Seed realistic demo data
 - [ ] Rehearse demo script
 - [ ] Record 4-min video
