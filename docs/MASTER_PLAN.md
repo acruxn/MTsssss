@@ -329,7 +329,7 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 - [x] Commander: Reviewed, fixed TS error, deployed Lambda + Amplify
 - [x] Live tested: fuel_payment ✅, check_balance ✅, form_fill ✅, scan_pay ✅
 
-### Phase 7: Polish + Demo Prep ⏳ IN PROGRESS
+### Phase 7: Polish + Demo Prep ✅ DONE (25 Apr 2026, 10:20 PM)
 - [x] Fix CSS animations (ripple-ring, popIn, eq-bar class not wired)
 - [x] End-to-end live flow test (speak → confirm → success)
 - [x] Mock Face ID / biometric confirmation step
@@ -338,6 +338,10 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 - [x] Bedrock tool_use for reliable structured JSON
 - [x] Retry logic (1 retry on Bedrock failure)
 - [x] Lambda 60s timeout + CloudWatch 5min warmup
+- [x] Strands Agents SDK integrated (Python 3.12 venv + Lambda)
+- [x] 14 TNG actions with auto-fill flow simulator
+- [x] TNG-branded features: GO+, GOpinjam, GOrewards, RFID, categorized services
+- [x] Action flow: typewriter auto-fill → confirm → Face ID → receipt
 - [ ] Update pitch-deck.html with new screenshots
 - [ ] Rehearse demo script
 - [ ] Record demo video (optional)

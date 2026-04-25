@@ -1,119 +1,104 @@
-# FormBuddy 🎙️
+# FormBuddy — Voice-Powered AI Agent for TNG eWallet
 
-**Can't read the form? Just tell us what you need.**
+> **TNG Digital FinHack 2026 | Track 1: Financial Inclusion**
 
-*TNG Digital FinHack 2026 — Track 1: Financial Inclusion*
+🌐 **Live Demo**: [https://main.d3is7aj4mo28yv.amplifyapp.com](https://main.d3is7aj4mo28yv.amplifyapp.com)
 
 ---
 
 ## The Problem
 
-Malaysia has ~1.2 million unbanked adults (World Bank Global Findex 2021). Digital literacy remains a barrier — many elderly, low-literacy, and migrant worker populations can't read English form labels, type accurately on small screens, or navigate multi-step digital processes. They abandon eWallet onboarding forms or rely on others (a security risk), staying excluded from digital financial services.
+8 million Malaysians can't use digital payments — not because they don't have phones, but because they can't fill the forms. Elderly, migrant workers, and low-literacy communities are excluded from digital financial services.
 
 ## The Solution
 
-FormBuddy is a voice-powered form assistant. Users speak in their language (English, Malay, Chinese, Tamil) → AI extracts structured form fields → the form auto-fills → voice reads back for confirmation. No typing, no reading required.
+**FormBuddy** is a built-in AI assistant inside TNG eWallet. Users speak naturally in any language — Malay, English, Chinese, Tamil, or rojak — and the AI understands what they want to do, fills in the screens, confirms with biometric, and executes.
 
-## Demo Flow
+```
+Uncle: "Nak pump minyak RON95 lima puluh"
+AI:    ⛽ Fuel Payment → RON95 → RM50 → Confirm with Face ID → ✅ Done
+```
 
-1. **Pick a form** — e.g. "Send Money", "Register Account"
-2. 🔊 FormBuddy asks the first question in the user's language
-3. 🎙️ User speaks: *"Ahmad, seratus ringgit, untuk sewa"*
-4. AI extracts fields → form auto-fills: `Recipient [Ahmad]` `Amount [RM100]` `Reference [Sewa]`
-5. 🔊 Reads back: *"Hantar RM100 ke Ahmad untuk sewa. Betul?"*
-6. 🎙️ User confirms → ✅ Submitted
+### 14 Supported Actions
 
-## Tech Stack
-
-| Layer | Technology | Cloud |
-|-------|-----------|-------|
-| Voice I/O | Web Speech API | Browser |
-| AI | Bedrock Claude Sonnet 4 | AWS ap-southeast-1 |
-| Backend | FastAPI + Mangum (Lambda) | AWS |
-| Database | OceanBase (MySQL-compatible) | Alibaba Cloud ap-southeast-3 |
-| Frontend | React + TypeScript + Tailwind | Vite |
-| IaC | Terraform | AWS + Alibaba |
+| Payments | Financial | Lifestyle |
+|----------|-----------|-----------|
+| ⛽ Fuel Payment | 📈 GO+ Savings | 🎫 Buy Tickets |
+| 💸 Fund Transfer | 💳 GOpinjam Loan | 🍔 Food Delivery |
+| 🧾 Pay Bills | 🛡️ Insurance | ❤️ Donations |
+| 📷 Scan & Pay | 💰 Check Balance | |
+| 📱 Prepaid Reload | | |
+| 🛣️ Toll / RFID | | |
+| 🅿️ Parking | | |
 
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────┐
-│              User's Browser                           │
-│  React + Tailwind + Vite                             │
-│  Web Speech API (STT/TTS) — all 4 languages          │
-└──────────────────┬───────────────────────────────────┘
-                   │ REST API
-                   ▼
-┌──────────────────────────────────────────────────────┐
-│         AWS — ap-southeast-1 (Singapore)              │
-│                                                      │
-│  Lambda + Function URL (FastAPI via Mangum)           │
-│  ┌────────────────────────────────────────────────┐  │
-│  │ /api/v1/forms         — Form template CRUD     │  │
-│  │ /api/v1/voice/extract — Transcript → fields    │  │
-│  │ /api/v1/voice/sessions— Session management     │  │
-│  │ /api/v1/dashboard     — Completion metrics     │  │
-│  └────────────────────────┬───────────────────────┘  │
-│                           │                          │
-│  Bedrock Claude Sonnet 4  │  S3 (frontend hosting)   │
-│  (field extraction AI)    │                          │
-└───────────────────────────┼──────────────────────────┘
-                            │
-                            ▼
-┌──────────────────────────────────────────────────────┐
-│     Alibaba Cloud — ap-southeast-3 (Kuala Lumpur)     │
-│                                                      │
-│  OceanBase (MySQL-compatible)                        │
-│  ├─ users                                            │
-│  ├─ form_templates                                   │
-│  └─ voice_sessions                                   │
-│                                                      │
-│  OSS (audio/document storage)                        │
-└──────────────────────────────────────────────────────┘
+Browser (HTTPS)                    AWS Singapore              Alibaba Cloud KL
+┌─────────────────┐    ┌──────────────────────────┐    ┌──────────────────┐
+│ React + Tailwind │───▶│ API Gateway → Lambda     │───▶│ RDS MySQL 8.0    │
+│ Web Speech API   │    │ Strands Agents SDK       │    │ (OceanBase-      │
+│ TNG Mock UI      │    │ Bedrock Claude Sonnet 4  │    │  compatible)     │
+│ AWS Amplify      │    │ tool_use (structured JSON)│    │ Kuala Lumpur     │
+└─────────────────┘    └──────────────────────────┘    └──────────────────┘
 ```
 
-## Quick Start
+**Multi-cloud by design**: Data stays in Malaysia on Alibaba Cloud. Compute + AI on AWS Singapore. Terraform unifies deployment.
 
-```bash
-# Backend
-cd backend && python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env  # fill in credentials
-uvicorn main:app --reload
+## Tech Stack
 
-# Frontend
-cd frontend && npm install && npm run dev
+| Layer | Technology |
+|-------|-----------|
+| **AI Agent** | Strands Agents SDK + Bedrock Claude Sonnet 4 (tool_use) |
+| **Backend** | FastAPI + Mangum on AWS Lambda (Python 3.12) |
+| **Database** | Alibaba Cloud RDS MySQL 8.0 (Kuala Lumpur) |
+| **Frontend** | React 19 + TypeScript + Tailwind 4 + Vite 8 |
+| **Hosting** | AWS Amplify (HTTPS) + API Gateway HTTP API |
+| **Voice** | Web Speech API (browser-native STT/TTS, 4 languages) |
+| **IaC** | Terraform (AWS + Alibaba Cloud providers) |
 
-# Seed demo data
-cd backend && python ../scripts/seed.py
+## Key Features
+
+- **Voice-first**: Speak in any language, AI understands intent
+- **Action flow simulator**: Screens auto-fill like a human tapping through the app
+- **Face ID mock**: Biometric confirmation before execution
+- **14 TNG actions**: Covers payments, transfers, bills, fuel, GO+, GOpinjam, and more
+- **TNG-branded UI**: Phone frame mockup with authentic bottom tabs, feature grid
+- **Fully deployed**: No local dependencies — judges can open the URL on their phone
+
+## Live URLs
+
+| Service | URL |
+|---------|-----|
+| Frontend (HTTPS) | https://main.d3is7aj4mo28yv.amplifyapp.com |
+| Backend API | https://w6qtfxl2va.execute-api.ap-southeast-1.amazonaws.com |
+| Database | finhack-formbuddy.mysql.kualalumpur.rds.aliyuncs.com |
+
+## Project Structure
+
+```
+├── backend/              # FastAPI + Strands Agents + Bedrock
+│   ├── services/         # AI service (Strands + tool_use)
+│   ├── api/routes/       # REST endpoints
+│   └── models/           # SQLAlchemy ORM
+├── frontend/             # React + TypeScript + Tailwind
+│   ├── src/pages/        # TNGHome, Agent, Services
+│   ├── src/components/   # AppShell, ActionFlow
+│   └── src/lib/          # API client, flows, speech
+├── infra/                # Terraform (AWS + Alibaba)
+├── docs/                 # MASTER_PLAN, EXECUTION_PLAN, design docs
+└── scripts/              # Deploy, seed, credentials
 ```
 
-## API Endpoints
+## Why This Wins
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/forms` | List form templates |
-| POST | `/api/v1/forms` | Create form template |
-| GET | `/api/v1/forms/{id}` | Get form template |
-| POST | `/api/v1/voice/sessions` | Start voice session |
-| GET | `/api/v1/voice/sessions` | List sessions (filterable) |
-| GET | `/api/v1/voice/sessions/{id}` | Get session status |
-| POST | `/api/v1/voice/sessions/{id}/complete` | Complete session |
-| POST | `/api/v1/voice/extract` | Extract fields from transcript |
-| GET | `/api/v1/dashboard/stats` | Dashboard statistics |
-
-## Screenshots
-
-<!-- Add screenshots here -->
-
-## Team
-
-<!-- Add team members here -->
-
-## License
-
-MIT
+1. **The demo moment** — Uncle speaks rojak, AI pays for fuel. Visceral.
+2. **Real problem** — BNM Financial Inclusion Framework identifies this exact gap
+3. **Not just forms** — Full AI agent that executes any TNG action by voice
+4. **Genuine multi-cloud** — Alibaba Cloud (data, Malaysia) + AWS (compute + AI, Singapore)
+5. **Production-grade AI** — Strands Agents SDK, Bedrock tool_use, retry logic
+6. **Sponsor alignment** — Alibaba Cloud RDS, AWS Bedrock, Terraform
 
 ---
 
-Built for **TNG Digital FinHack 2026** — Track 1: Financial Inclusion
+*Built for TNG Digital FinHack 2026. Track 1: Financial Inclusion.*
