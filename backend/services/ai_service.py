@@ -62,21 +62,31 @@ class AIService:
             logger.error(f"Qwen error: {e}")
             return None
 
-    async def ask_bedrock(self, prompt: str) -> Optional[str]:
-        """Call AWS Bedrock Claude for field extraction."""
+    async def ask_bedrock(
+        self, prompt: str, output_schema: Optional[Dict] = None,
+    ) -> Optional[str]:
+        """Call AWS Bedrock Claude. When output_schema is provided, uses Structured Outputs."""
         if not self.bedrock:
             logger.warning("Bedrock not configured")
             return None
         try:
+            request_body: Dict = {
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 512,
+                "messages": [
+                    {"role": "user", "content": f"{SYSTEM_PROMPT}\n\n{prompt}"}
+                ],
+            }
+            if output_schema:
+                request_body["output_config"] = {
+                    "format": {
+                        "type": "json_schema",
+                        "schema": output_schema,
+                    }
+                }
             response = self.bedrock.invoke_model(
                 modelId=settings.BEDROCK_MODEL,
-                body=json.dumps({
-                    "anthropic_version": "bedrock-2023-05-31",
-                    "max_tokens": 512,
-                    "messages": [
-                        {"role": "user", "content": f"{SYSTEM_PROMPT}\n\n{prompt}"}
-                    ],
-                }),
+                body=json.dumps(request_body),
             )
             body = json.loads(response["body"].read())
             return body["content"][0]["text"]
@@ -86,11 +96,26 @@ class AIService:
 
     async def dual_analyze(self, prompt: str) -> dict:
         """Run both AIs and merge extracted fields."""
+        extract_schema = {
+            "type": "object",
+            "properties": {
+                "fields": {"type": "object", "description": "Extracted field values"},
+                "confidence": {"type": "number", "description": "Confidence 0.0-1.0"},
+            },
+            "required": ["fields", "confidence"],
+            "additionalProperties": False,
+        }
         qwen_raw = await self.ask_qwen(prompt)
-        bedrock_raw = await self.ask_bedrock(prompt)
+        bedrock_raw = await self.ask_bedrock(prompt, output_schema=extract_schema)
 
         qwen_result = _parse_json(qwen_raw) if qwen_raw else None
-        bedrock_result = _parse_json(bedrock_raw) if bedrock_raw else None
+        if bedrock_raw:
+            try:
+                bedrock_result = json.loads(bedrock_raw)
+            except (json.JSONDecodeError, TypeError):
+                bedrock_result = _parse_json(bedrock_raw)
+        else:
+            bedrock_result = None
 
         # Merge fields — prefer Qwen, fill gaps with Bedrock
         merged_fields: dict = {}
@@ -128,15 +153,35 @@ class AIService:
             f"- \"scan_pay\": scan and pay / QR payment at merchant/shop (params: merchant, amount)\n"
             f"- \"pin_reload\": reload prepaid phone/top up (params: phone, amount, carrier)\n\n"
             f"IMPORTANT: Always pick the best matching action_type. Use \"form_fill\" only when a template matches. "
-            f"Use a quick action when the intent matches even loosely. Only use \"unknown\" if nothing fits at all.\n\n"
-            f"Return ONLY valid JSON: {{\"action_type\": \"form_fill|fuel_payment|check_balance|scan_pay|pin_reload|unknown\", "
-            f"\"template_id\": <int or null>, \"template_name\": <str or null>, "
-            f"\"action_label\": <human-readable label>, "
-            f"\"fields\": {{<param>: <value>}}, \"confidence\": <0.0-1.0>, "
-            f"\"confirmation_message\": <short confirmation string>}}"
+            f"Use a quick action when the intent matches even loosely. Only use \"unknown\" if nothing fits at all.\n"
+            f"Generate a short confirmation_message summarizing what the user wants."
         )
-        raw = await self.ask_bedrock(prompt)
-        result = _parse_json(raw) if raw else {}
+        schema = {
+            "type": "object",
+            "properties": {
+                "action_type": {
+                    "type": "string",
+                    "enum": ["form_fill", "fuel_payment", "check_balance", "scan_pay", "pin_reload", "unknown"],
+                    "description": "The detected action type",
+                },
+                "template_id": {"type": ["integer", "null"], "description": "Form template ID if action_type is form_fill"},
+                "template_name": {"type": ["string", "null"], "description": "Form template name if action_type is form_fill"},
+                "action_label": {"type": ["string", "null"], "description": "Human-readable action label"},
+                "fields": {"type": "object", "description": "Extracted parameter values"},
+                "confidence": {"type": "number", "description": "Confidence score 0.0-1.0"},
+                "confirmation_message": {"type": ["string", "null"], "description": "Short confirmation message for the user"},
+            },
+            "required": ["action_type", "fields", "confidence"],
+            "additionalProperties": False,
+        }
+        raw = await self.ask_bedrock(prompt, output_schema=schema)
+        if raw:
+            try:
+                result = json.loads(raw)
+            except (json.JSONDecodeError, TypeError):
+                result = _parse_json(raw) or {}
+        else:
+            result = {}
         return {
             "action_type": result.get("action_type", "unknown"),
             "template_id": result.get("template_id"),
