@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { detectIntent, getBalance, transcribeAudio } from "../lib/api";
+import { detectIntent, getBalance, transcribeAudio, postTransfer, postPayment } from "../lib/api";
 import { speak, stopSpeaking } from "../lib/speech";
 
 interface ChatPanelProps {
@@ -36,6 +36,10 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
   const [processing, setProcessing] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [pillText, setPillText] = useState("");
+  const [pendingAction, setPendingAction] = useState<{ actionType: string; fields: Record<string, unknown>; confirmMsg: string } | null>(null);
+  const [showBiometric, setShowBiometric] = useState(false);
+  const [bioVerifying, setBioVerifying] = useState(false);
+  const [bioSuccess, setBioSuccess] = useState(false);
 
   const recognitionRef = useRef<ReturnType<typeof Object> | null>(null);
   const listeningRef = useRef(false);
@@ -219,18 +223,25 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
         return;
       }
 
-      // Real action → dispatch to parent
+      // Real action → show confirmation in chat
       const label = ACTION_META[aType] || aType;
-      const confirmMsg = result.confirmation_message || `Processing ${label}...`;
-      setMessages(prev => [...prev, { role: "assistant", content: `Got it! ${confirmMsg}` }]);
-      speak(`Got it! ${confirmMsg}`, result.detected_language || language);
+      const confirmMsg = result.confirmation_message || `${label}: ready to proceed`;
+      const amt = parseFloat(String(result.fields.amount || result.fields.jumlah || "0")) || 0;
+      const recipient = String(result.fields.recipient || result.fields.penerima || "");
 
-      setPillText(`Navigating to ${label}...`);
-      setPanelState("pill");
+      const details: string[] = [];
+      if (recipient) details.push(`To: ${recipient}`);
+      if (amt > 0) details.push(`Amount: RM${amt.toFixed(2)}`);
+      Object.entries(result.fields).forEach(([k, v]) => {
+        if (v && k !== "amount" && k !== "recipient" && k !== "penerima" && k !== "jumlah")
+          details.push(`${k.replace(/_/g, " ")}: ${v}`);
+      });
 
-      onAction({ actionType: aType, fields: result.fields, confirmMsg });
+      const summaryMsg = `${confirmMsg}\n\n${details.join("\n")}\n\nPlease confirm to proceed.`;
+      setMessages(prev => [...prev, { role: "assistant", content: summaryMsg }]);
+      speak(confirmMsg, result.detected_language || language);
 
-      setTimeout(() => { setPanelState("hidden"); onClose(); }, 2000);
+      setPendingAction({ actionType: aType, fields: result.fields, confirmMsg });
     } catch {
       setMessages(prev => [...prev, { role: "assistant", content: "Something went wrong. Please try again." }]);
     }
@@ -243,7 +254,49 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
     setMessages([]);
     setInput("");
     setTranscript("");
+    setPendingAction(null);
+    setShowBiometric(false);
+    setBioVerifying(false);
+    setBioSuccess(false);
     onClose();
+  }
+
+  async function handleBioConfirm() {
+    if (!pendingAction) return;
+    setBioVerifying(true);
+    await new Promise(r => setTimeout(r, 1000));
+    setBioSuccess(true);
+    await new Promise(r => setTimeout(r, 600));
+
+    const { actionType, fields } = pendingAction;
+    const amt = parseFloat(String(fields.amount || fields.jumlah || "0")) || 0;
+    const recipient = String(fields.recipient || fields.penerima || "");
+
+    try {
+      let resp: { balance: number; transaction_id?: number | null; warnings?: string[]; message: string };
+      if (actionType === "fund_transfer" || actionType === "form_fill") {
+        resp = await postTransfer(recipient, amt, String(fields.reference || fields.rujukan || ""));
+      } else {
+        resp = await postPayment(actionType, amt, fields as Record<string, unknown>);
+      }
+
+      const warnings = (resp as unknown as Record<string, unknown>).warnings as string[] || [];
+      let receiptMsg = `✅ ${resp.message}\n\n💰 Balance: RM ${resp.balance.toFixed(2)}`;
+      if (resp.transaction_id) receiptMsg += `\n🧾 TXN-${resp.transaction_id}`;
+      if (warnings.length > 0) receiptMsg += `\n\n⚠️ ${warnings.join("\n⚠️ ")}`;
+
+      setMessages(prev => [...prev, { role: "assistant", content: receiptMsg }]);
+      speak(`Done! ${resp.message}. Your balance is RM ${resp.balance.toFixed(2)}`, language);
+    } catch (e) {
+      const errMsg = e instanceof Error ? e.message : "Transaction failed";
+      setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errMsg}` }]);
+      speak("Sorry, the transaction failed.", language);
+    }
+
+    setShowBiometric(false);
+    setBioVerifying(false);
+    setBioSuccess(false);
+    setPendingAction(null);
   }
 
   if (panelState === "hidden") return null;
@@ -309,6 +362,31 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
               </div>
             </div>
           )}
+          {pendingAction && !showBiometric && (
+            <div className="flex gap-2 mt-2">
+              {pendingAction.actionType === "apply_loan" ? (
+                <button onClick={() => {
+                  onAction(pendingAction);
+                  setPendingAction(null);
+                  setPanelState("pill"); setPillText("Opening GOpinjam...");
+                  setTimeout(() => { setPanelState("hidden"); onClose(); }, 2000);
+                }} className="flex-1 bg-[#0066FF] text-white rounded-xl py-2.5 text-sm font-medium">
+                  Go to Loan Page
+                </button>
+              ) : (
+                <button onClick={() => setShowBiometric(true)} className="flex-1 bg-emerald-500 text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-1.5">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Confirm
+                </button>
+              )}
+              <button onClick={() => {
+                setPendingAction(null);
+                setMessages(prev => [...prev, { role: "assistant", content: "Cancelled. What else can I help with?" }]);
+              }} className="px-4 bg-gray-100 text-gray-600 rounded-xl py-2.5 text-sm font-medium">
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Input bar */}
@@ -339,6 +417,37 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
             </button>
           )}
         </div>
+
+        {/* Biometric overlay */}
+        {showBiometric && (
+          <div className="absolute inset-0 z-[60] bg-black/80 rounded-t-2xl flex flex-col items-center justify-center">
+            {bioSuccess ? (
+              <div className="animate-popIn w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center">
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+            ) : bioVerifying ? (
+              <>
+                <svg className="w-16 h-16 text-white animate-pulse" viewBox="0 0 96 96" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M48 20c-15.5 0-28 12.5-28 28" strokeLinecap="round"/><path d="M76 48c0-15.5-12.5-28-28-28" strokeLinecap="round"/>
+                  <path d="M36 48c0-6.6 5.4-12 12-12s12 5.4 12 12" strokeLinecap="round"/><path d="M48 36v24" strokeLinecap="round"/>
+                </svg>
+                <p className="text-white text-sm mt-4">Verifying...</p>
+              </>
+            ) : (
+              <>
+                <svg className="w-16 h-16 text-white" viewBox="0 0 96 96" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M48 20c-15.5 0-28 12.5-28 28" strokeLinecap="round"/><path d="M76 48c0-15.5-12.5-28-28-28" strokeLinecap="round"/>
+                  <path d="M36 48c0-6.6 5.4-12 12-12s12 5.4 12 12" strokeLinecap="round"/><path d="M48 36v24" strokeLinecap="round"/>
+                </svg>
+                <p className="text-white text-lg font-semibold mt-4">Touch ID</p>
+                <p className="text-white/50 text-sm mt-2 mb-6">Verify to authorize this transaction</p>
+                <button onClick={handleBioConfirm} className="px-8 py-3 rounded-full border-2 border-white/60 text-white font-semibold text-sm active:scale-95 transition-transform hover:border-white">
+                  Tap to verify
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </>
   );
