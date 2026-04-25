@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -75,6 +76,23 @@ async def complete_session(session_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(session)
     return _session_response(session)
+
+
+@router.get("/sessions")
+async def list_sessions(
+    status: Optional[str] = None,
+    language: Optional[str] = None,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+):
+    """List voice sessions with optional filters."""
+    q = db.query(VoiceSession).order_by(VoiceSession.created_at.desc())
+    if status:
+        q = q.filter(VoiceSession.status == status)
+    if language:
+        q = q.filter(VoiceSession.language == language)
+    sessions = q.limit(limit).all()
+    return [_session_response(s) for s in sessions]
 
 
 def _session_response(session: VoiceSession) -> dict:

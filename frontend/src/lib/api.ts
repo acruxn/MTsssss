@@ -71,3 +71,5 @@ export const getSession = (sessionId: number | string) =>
   request<VoiceSession>(`/voice/sessions/${sessionId}`);
 export const completeSession = (sessionId: number | string) =>
   request<VoiceSession>(`/voice/sessions/${sessionId}/complete`, { method: "POST" });
+export const getSessions = (limit: number = 20) =>
+  request<VoiceSession[]>(`/voice/sessions?limit=${limit}`);
