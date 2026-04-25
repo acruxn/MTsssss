@@ -82,6 +82,7 @@ export interface DetectIntentResult {
   fields: Record<string, unknown>;
   confidence: number;
   confirmation_message: string | null;
+  detected_language: string;
 }
 
 export const detectIntent = (transcript: string, language: string) =>

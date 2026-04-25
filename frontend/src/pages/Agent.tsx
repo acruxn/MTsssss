@@ -124,7 +124,7 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
         const aType = result.action_type || (result.template_id ? "form_fill" : actionParam || "unknown");
         const f = getFlow(aType, result.fields);
         if (result.template_id || result.action_type || result.confirmation_message) {
-          if (result.confirmation_message) await speak(result.confirmation_message, language);
+          if (result.confirmation_message) await speak(result.confirmation_message, result.detected_language || language);
           setFlow(f);
           setPhase("flow");
         } else {

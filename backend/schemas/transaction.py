@@ -60,6 +60,7 @@ class DetectIntentResponse(BaseModel):
     fields: Dict[str, Optional[Any]] = {}
     confidence: float = 0.0
     confirmation_message: Optional[str] = None
+    detected_language: str = "en"
 
 
 class VoiceSessionResponse(BaseModel):

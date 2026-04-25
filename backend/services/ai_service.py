@@ -264,9 +264,10 @@ class AIService:
                 "action_label": {"type": "string", "description": "Human-readable action label e.g. Fuel Payment"},
                 "fields": {"type": "object", "description": "Extracted parameter values"},
                 "confidence": {"type": "number", "description": "Confidence score 0.0-1.0"},
-                "confirmation_message": {"type": "string", "description": "Short confirmation message for the user"},
+                "confirmation_message": {"type": "string", "description": "Short confirmation message for the user in the SAME language they spoke"},
+                "detected_language": {"type": "string", "enum": ["en", "ms", "zh", "zh-HK", "ta"], "description": "Language the user spoke in: en=English, ms=Malay/BM, zh=Mandarin, zh-HK=Cantonese, ta=Tamil"},
             },
-            "required": ["action_type", "fields", "confidence", "confirmation_message"],
+            "required": ["action_type", "fields", "confidence", "confirmation_message", "detected_language"],
         }
         result = await self._bedrock_tool_call(
             prompt, "detect_intent",
@@ -275,7 +276,7 @@ class AIService:
         )
         if not result:
             return {"action_type": "unknown", "template_id": None, "template_name": None,
-                    "action_label": None, "fields": {}, "confidence": 0, "confirmation_message": None}
+                    "action_label": None, "fields": {}, "confidence": 0, "confirmation_message": None, "detected_language": "en"}
         return {
             "action_type": result.get("action_type", "unknown"),
             "template_id": result.get("template_id"),
@@ -284,6 +285,7 @@ class AIService:
             "fields": result.get("fields", {}),
             "confidence": float(result.get("confidence", 0)),
             "confirmation_message": result.get("confirmation_message"),
+            "detected_language": result.get("detected_language", "en"),
         }
 
 
