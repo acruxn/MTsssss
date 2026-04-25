@@ -195,6 +195,7 @@ class AIService:
         prompt = (
             f"{user_said}\n\n"
             f"QUICK ACTIONS — check these FIRST, they take priority over form templates:\n"
+            f"- \"fund_transfer\": send money / transfer / hantar duit / pindah wang (params: recipient, amount, reference)\n"
             f"- \"fuel_payment\": pay for fuel/petrol/minyak/pump (params: fuel_type, amount, station)\n"
             f"- \"check_balance\": check eWallet balance/baki/how much money/berapa (NO params needed)\n"
             f"- \"scan_pay\": scan and pay / QR payment at merchant/shop/kedai (params: merchant, amount)\n"
@@ -266,7 +267,7 @@ class AIService:
             "properties": {
                 "action_type": {
                     "type": "string",
-                    "enum": ["form_fill", "fuel_payment", "check_balance", "scan_pay", "pin_reload", "bill_payment",
+                    "enum": ["form_fill", "fund_transfer", "fuel_payment", "check_balance", "scan_pay", "pin_reload", "bill_payment",
                             "pay_toll", "pay_parking", "buy_insurance", "apply_loan", "invest",
                             "buy_ticket", "food_delivery", "donate", "chat", "unknown"],
                     "description": "The detected action type",
