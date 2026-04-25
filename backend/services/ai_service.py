@@ -8,12 +8,50 @@ from core.config import settings
 
 logger = logging.getLogger(__name__)
 
+try:
+    from strands import Agent, tool
+    from strands.models import BedrockModel
+    STRANDS_AVAILABLE = True
+except ImportError:
+    STRANDS_AVAILABLE = False
+    logger.warning("strands-agents not installed, using _bedrock_tool_call fallback")
+
 SYSTEM_PROMPT = (
     "You are FormBuddy, a multilingual voice form-filling assistant. "
     "You extract structured form field values from voice transcripts. "
     "Supported languages: English, Malay, Chinese, Tamil. "
     "Respond in JSON with keys: fields (object), confidence (0.0-1.0)."
 )
+
+# Strands tool — captures result via closure
+_last_tool_result: Dict = {}
+
+if STRANDS_AVAILABLE:
+    @tool
+    def detect_intent_tool(
+        action_type: str,
+        template_id: int = None,
+        template_name: str = None,
+        action_label: str = None,
+        fields: dict = None,
+        confidence: float = 0.0,
+        confirmation_message: str = None,
+    ) -> dict:
+        """Detect user intent from speech. Call this tool with the detected action.
+
+        action_type must be one of: form_fill, fuel_payment, check_balance, scan_pay, pin_reload, unknown
+        """
+        global _last_tool_result
+        _last_tool_result = {
+            "action_type": action_type,
+            "template_id": template_id,
+            "template_name": template_name,
+            "action_label": action_label,
+            "fields": fields or {},
+            "confidence": confidence,
+            "confirmation_message": confirmation_message,
+        }
+        return _last_tool_result
 
 
 class AIService:
@@ -144,13 +182,13 @@ class AIService:
         }
 
     async def detect_intent(self, transcript: str, templates: list, language: str) -> Dict:
-        """Detect user intent using Bedrock tool_use for guaranteed structured output."""
+        """Detect user intent using Strands Agent (preferred) or Bedrock tool_use fallback."""
         template_desc = "\n".join(
             f"- Template '{t['name']}' (id={t['id']}, category={t['category']}): fields={[f['name'] for f in t['fields']]}"
             for t in templates
         )
         prompt = (
-            f"You are FormBuddy, a TNG eWallet AI assistant. A user said: \"{transcript}\" (language: {language})\n\n"
+            f"A user said: \"{transcript}\" (language: {language})\n\n"
             f"Available form templates:\n{template_desc}\n\n"
             f"Quick actions (no form needed):\n"
             f"- \"fuel_payment\": pay for fuel/petrol/minyak (params: fuel_type, amount, station)\n"
@@ -159,8 +197,55 @@ class AIService:
             f"- \"pin_reload\": reload prepaid phone/top up (params: phone, amount, carrier)\n\n"
             f"IMPORTANT: Always pick the best matching action_type. Use \"form_fill\" only when a template matches. "
             f"Use a quick action when the intent matches even loosely. Only use \"unknown\" if nothing fits at all.\n"
-            f"Call the detect_intent tool with your analysis."
+            f"Call the detect_intent_tool with your analysis."
         )
+
+        # Try Strands Agent first
+        if STRANDS_AVAILABLE:
+            try:
+                result = self._strands_detect_intent(prompt)
+                if result:
+                    return result
+                logger.warning("Strands agent returned no result, falling back to _bedrock_tool_call")
+            except Exception as e:
+                logger.error(f"Strands agent error: {e}, falling back to _bedrock_tool_call")
+
+        # Fallback to raw Bedrock tool_use
+        return await self._detect_intent_bedrock_fallback(prompt)
+
+    def _strands_detect_intent(self, prompt: str) -> Optional[Dict]:
+        """Run detect_intent via Strands Agent (synchronous)."""
+        global _last_tool_result
+        _last_tool_result = {}
+
+        model = BedrockModel(
+            region_name=settings.AWS_REGION,
+            model_id=settings.BEDROCK_MODEL,
+        )
+        agent = Agent(
+            model=model,
+            tools=[detect_intent_tool],
+            system_prompt=(
+                "You are FormBuddy, a TNG eWallet AI assistant. "
+                "Analyze the user's speech and call detect_intent_tool with the detected action."
+            ),
+        )
+        agent(prompt)
+
+        if _last_tool_result and _last_tool_result.get("action_type"):
+            return {
+                "action_type": _last_tool_result.get("action_type", "unknown"),
+                "template_id": _last_tool_result.get("template_id"),
+                "template_name": _last_tool_result.get("template_name"),
+                "action_label": _last_tool_result.get("action_label"),
+                "fields": _last_tool_result.get("fields", {}),
+                "confidence": float(_last_tool_result.get("confidence", 0)),
+                "confirmation_message": _last_tool_result.get("confirmation_message"),
+            }
+        return None
+
+    async def _detect_intent_bedrock_fallback(self, prompt: str) -> Dict:
+        """Fallback: detect intent via raw Bedrock tool_use API."""
         schema = {
             "type": "object",
             "properties": {
@@ -180,7 +265,7 @@ class AIService:
         }
         result = await self._bedrock_tool_call(
             prompt, "detect_intent",
-            "Detect user intent from speech and extract parameters. Returns action type, fields, and confirmation message.",
+            "Detect user intent from speech and extract parameters.",
             schema,
         )
         if not result:
