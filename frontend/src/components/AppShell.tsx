@@ -162,20 +162,8 @@ export default function AppShell({
     </div>
   );
 
-  const formBuddyPill = (
-    <button
-      onClick={() => setChatOpen(prev => !prev)}
-      className="absolute right-4 -top-12 z-40 flex items-center gap-1.5 bg-[#0066FF] text-white pl-3 pr-3.5 py-2 rounded-full shadow-lg shadow-blue-500/30 hover:bg-[#0052CC] transition-colors text-xs font-semibold"
-      aria-label="Open FormBuddy voice assistant"
-    >
-      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-      FormBuddy
-    </button>
-  );
-
   const tabBar = (
     <div className="relative bg-white border-t border-gray-200 shrink-0">
-      {formBuddyPill}
       <div className="flex items-end justify-around h-16 px-1">
         {TABS.map((t) => {
           if (t.label === "Scan") {
