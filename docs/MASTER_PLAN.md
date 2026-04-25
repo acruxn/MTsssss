@@ -1,7 +1,7 @@
 # FormBuddy — Project Master Plan
 ## TNG Digital FinHack 2026 | Track 1: Financial Inclusion
 
-> Single source of truth. Last updated: 26 Apr 2026, 4:28 AM MYT
+> Single source of truth. Last updated: 26 Apr 2026, 7:50 AM MYT
 
 ---
 
@@ -190,9 +190,10 @@ Tested 25 Apr 2026, 8:30 PM MYT — all live and deployed.
 
 | Layer | Technology | Cloud | Verified |
 |-------|-----------|-------|----------|
-| **Voice I/O** | Web Speech API | Browser (free) | N/A — browser native |
+| **Voice STT** | AWS Transcribe (auto-language) + Web Speech API (live subtitles) | AWS + Browser | ✅ Tested |
+| **Voice TTS** | Web Speech API with natural voice selection | Browser | ✅ Tested |
 | **AI** | Bedrock Claude Sonnet 4.6 | AWS ap-southeast-1 | ✅ Tested |
-| **AI Method** | Strands Agents SDK + tool_use (schema-enforced JSON) | AWS Bedrock | ✅ Reliable structured output |
+| **AI Method** | Raw tool_use (schema-enforced JSON, 15 prompt rules) | AWS Bedrock | ✅ Reliable structured output |
 | **Backend** | FastAPI + Mangum (Lambda) | AWS ap-southeast-1 | ✅ Live, 60s timeout |
 | **Database** | RDS MySQL 8.0 (OceanBase-compatible) | Alibaba ap-southeast-3 | ✅ Live in KL |
 | **Frontend** | React 19 + TypeScript + Tailwind 4 + Vite 8 | AWS Amplify (HTTPS) | ✅ Live |
@@ -261,9 +262,9 @@ AI receives transcript + field definitions → returns extracted values:
 | Cantonese (粵語) | ✅ | ✅ | ✅ |
 | Tamil | ✅ | ✅ | ✅ |
 
-Primary voice I/O is browser-native. All 5 languages work. Bedrock handles the intelligence (field extraction from any language).
+Primary STT uses AWS Transcribe with auto-language detection. Web Speech API runs simultaneously for live subtitles. TTS uses browser-native voices with natural voice selection. All 5 languages work.
 
-**Auto language detection**: The AI detects the language from the transcript and responds in the same language. User selects language for STT accuracy, but the AI response language is auto-detected.
+**Auto language detection**: AWS Transcribe auto-detects the language from audio. The AI also detects language from the transcript text and responds in the same language.
 
 ---
 
@@ -487,6 +488,25 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 - [x] Form pages: TransferPage, FuelPage, ReloadPage, BillPage, TaskPage read URL prefill params
 - [x] Form pages: show "Pre-filled by FormBuddy" banner when prefilled
 - [x] ChatPanel contained within phone frame (absolute, not fixed positioning)
+
+### Phase 13: AWS Transcribe + In-Chat Execution + Polish ✅ DONE (26 Apr 2026, 7:50 AM)
+- [x] AWS Transcribe: /api/v1/voice/transcribe endpoint with auto-language detection (en-US, ms-MY, zh-CN, ta-IN)
+- [x] Frontend: MediaRecorder captures audio, sends to Transcribe, Web Speech API as live subtitle fallback
+- [x] Lambda IAM: added s3:PutObject/DeleteObject + transcribe:* permissions
+- [x] In-chat execution: confirm → biometric → real API call → receipt, all inside ChatPanel
+- [x] Biometric overlay: Touch ID with tap-to-verify, verifying animation, success checkmark
+- [x] Receipt in chat: shows balance, transaction ID, fraud warnings
+- [x] Loan page: auto-refresh credit score after bank statement confirm
+- [x] AI personality: warm, friendly, emoji, conversational (prompt + schema descriptions)
+- [x] TTS: natural voice selection (Samantha/Karen/Google voices), rate 0.95
+- [x] Prompt rules 13-15: prefer action over chat, use conversation history
+- [x] ChatPanel: show chat_response (not just confirmation_message)
+- [x] UI polish: gradient mic button, assistant avatar in bubbles, improved input bar
+- [x] Services: real APK icons for fuel/transfer, better SVG paths
+- [x] Merged teammate's feat/loan_extract_disbursement branch (LoanPage, routes)
+- [x] Removed duplicate FormBuddy pill button
+- [x] Language badge in chat header, restart STT on language change
+- [x] fund_transfer added to AI quick actions + enum
 
 ### Future Enhancements
 - Bedrock Converse API for native multi-turn (currently frontend-managed history)
