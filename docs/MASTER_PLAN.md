@@ -1,7 +1,7 @@
 # FormBuddy — Project Master Plan
 ## TNG Digital FinHack 2026 | Track 1: Financial Inclusion
 
-> Single source of truth. Last updated: 25 Apr 2026, 3:50 PM MYT
+> Single source of truth. Last updated: 25 Apr 2026, 6:20 PM MYT
 
 ---
 
@@ -22,16 +22,35 @@ They abandon forms or rely on others (security risk), staying excluded from digi
 
 ### FormBuddy — "Can't read the form? Just tell us what you need."
 
-A voice-powered form engine. Users speak in their language → AI extracts form fields → form auto-fills → voice reads back for confirmation.
+A **built-in AI assistant inside TNG eWallet** that understands what users want to do — pay bills, pump fuel, send money, apply for loans — and does it for them. Voice-first, works in rojak/BM/EN/ZH/TA. Not just a form filler — a full agent that can execute any TNG action.
+
+### Core Concept
+FormBuddy lives inside the TNG app as a floating mic button. Users speak naturally in any language (including rojak/Manglish). The AI agent:
+1. **Understands intent** — "Nak pump minyak RON95 lima puluh" → fuel payment
+2. **Extracts parameters** — fuel type: RON95, amount: RM50
+3. **Confirms action** — "Pay RM50 for RON95 fuel? Confirm with Face ID"
+4. **Executes** — triggers the TNG payment flow
+
+### Supported Actions (Demo)
+
+| Action | Example Speech | What Happens |
+|--------|---------------|-------------|
+| **Fund Transfer** | "Send duit to Ahmad seratus ringgit" | Transfer confirmation → biometric → done |
+| **Bill Payment** | "Pay my TNB bill lah" | Bill lookup → amount confirm → pay |
+| **Fuel Payment** | "Nak pump RON95 lima puluh" | Fuel payment → station select → pay |
+| **Prepaid Reload** | "Top up phone aku tiga puluh" | Carrier detect → reload → done |
+| **Loan Application** | "I want apply micro loan" | Form fill by voice → submit |
+| **Check Balance** | "Baki aku berapa?" | Show balance (mock) |
 
 ### User Flow
 ```
-1. Pick a form (e.g., "Send Money")
-2. 🔊 FormBuddy asks: "Siapa yang anda nak hantar duit?"
-3. 🎙️ User speaks: "Ahmad, seratus ringgit, untuk sewa"
-4. Form auto-fills:  Recipient [Ahmad]  Amount [RM100]  Reference [Sewa]
-5. 🔊 Reads back: "Hantar RM100 ke Ahmad untuk sewa. Betul?"
-6. 🎙️ User: "Ya" → ✅ Submitted
+1. User opens TNG app → sees home screen with balance, quick actions
+2. Taps floating 🎙️ FormBuddy button (or says "Hey FormBuddy")
+3. Speaks naturally: "Nak hantar duit kat Ahmad seratus ringgit untuk sewa"
+4. AI detects: Fund Transfer, recipient=Ahmad, amount=RM100, ref=sewa
+5. Shows confirmation: "Send RM100 to Ahmad for sewa?"
+6. User confirms with Face ID / fingerprint
+7. ✅ Done — TTS reads back: "Sent RM100 to Ahmad"
 ```
 
 ---
@@ -43,30 +62,31 @@ A voice-powered form engine. Users speak in their language → AI extracts form 
 │              User's Browser                           │
 │  React + Tailwind + Vite                             │
 │  Web Speech API (STT/TTS) — all 4 languages          │
-│  Hosted: localhost:5173 (demo) or S3 static site     │
+│  Hosted: AWS Amplify (HTTPS)                         │
 └──────────────────┬───────────────────────────────────┘
-                   │ REST API
+                   │ REST API (HTTPS)
                    ▼
 ┌──────────────────────────────────────────────────────┐
 │         AWS — ap-southeast-1 (Singapore)              │
 │                                                      │
-│  Lambda + Function URL (FastAPI via Mangum)           │
+│  API Gateway HTTP API → Lambda (FastAPI via Mangum)   │
 │  ┌────────────────────────────────────────────────┐  │
 │  │ /api/v1/forms         — Form template CRUD     │  │
 │  │ /api/v1/voice/extract — Transcript → fields    │  │
+│  │ /api/v1/voice/detect-intent — Smart agent      │  │
 │  │ /api/v1/voice/sessions— Session management     │  │
 │  │ /api/v1/dashboard/stats— Completion metrics    │  │
 │  └────────────────────────┬───────────────────────┘  │
 │                           │                          │
-│  Bedrock Claude Sonnet 4  │  S3 (frontend hosting)   │
-│  (field extraction AI)    │                          │
+│  Bedrock Claude Sonnet 4  │  Amplify (HTTPS hosting) │
+│  (intent + extraction AI) │                          │
 └───────────────────────────┼──────────────────────────┘
                             │
                             ▼
 ┌──────────────────────────────────────────────────────┐
 │     Alibaba Cloud — ap-southeast-3 (Malaysia/KL)      │
 │                                                      │
-│  OceanBase (MySQL-compatible)                        │
+│  RDS MySQL 8.0 (OceanBase-compatible)                │
 │  ├─ users                                            │
 │  ├─ form_templates                                   │
 │  └─ voice_sessions                                   │
@@ -76,6 +96,13 @@ A voice-powered form engine. Users speak in their language → AI extracts form 
 
 IaC: Terraform (alicloud + aws providers)
 ```
+
+### Live URLs
+| Service | URL |
+|---------|-----|
+| Frontend (HTTPS) | https://main.d3is7aj4mo28yv.amplifyapp.com |
+| Backend API | https://w6qtfxl2va.execute-api.ap-southeast-1.amazonaws.com |
+| Database | finhack-formbuddy.mysql.kualalumpur.rds.aliyuncs.com:3306 |
 
 ---
 
@@ -259,6 +286,10 @@ Deploy:   ./scripts/deploy-lambda.sh
 | D6 | Bedrock returns JSON in markdown fences | Added fence-stripping to _parse_json in ai_service.py | 25 Apr 2026 |
 | D7 | ExtractedFields allows Any type, not just str | Bedrock returns int for amounts — schema changed to Dict[str, Optional[Any]] | 25 Apr 2026 |
 | D8 | Adapted mate's VoiceBridge pitch deck to FormBuddy | Changed product name, swapped tech stack badges to match our actual stack | 25 Apr 2026 |
+| D9 | Alibaba Cloud RDS MySQL instead of OceanBase | OceanBase CreateInstance order blocked by STS billing permission. RDS MySQL 8.0 works — same pymysql driver, same region (KL). In production, migrates to OceanBase with zero code change. | 25 Apr 2026 |
+| D10 | AWS Amplify for HTTPS frontend hosting | S3 website hosting is HTTP-only, CloudFront blocked by org SCP. Amplify gives HTTPS + SPA routing for free. Web Speech API requires HTTPS. | 25 Apr 2026 |
+| D11 | API Gateway HTTP API instead of Lambda Function URL | Function URL returns 403 (org SCP). HTTP API works, simpler than REST API, supports Lambda proxy + CORS. | 25 Apr 2026 |
+| D12 | Pivot from "form filler" to "built-in TNG AI agent" | FormBuddy is not just a form filler — it's a full AI assistant inside TNG eWallet. Understands intent (fuel, transfer, bills, loans), extracts params, confirms, executes. Form filling is one capability. | 25 Apr 2026 |
 
 ---
 
