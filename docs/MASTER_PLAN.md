@@ -436,6 +436,13 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 - [x] Update MASTER_PLAN, README with final state
 - [ ] Rehearse demo script
 
+### Future: Multi-Turn Conversational Agent
+Currently the voice agent is single-turn (user speaks once → AI classifies → action). For production:
+- **Option A (quick)**: Keep messages[] array in frontend, send full conversation history to detect-intent. If confidence < 0.7, show AI response as chat and keep listening. No backend changes.
+- **Option B (better)**: Use Bedrock Converse API with native multi-turn messages[]. Backend stores conversation per session.
+- **Option C (production)**: Bedrock AgentCore / Strands with session memory, planning, multi-step reasoning.
+- Flow: User says vague thing → AI asks clarifying questions → after enough context, triggers action flow with confirmation.
+
 ---
 
 ## 13. RISK MITIGATION
