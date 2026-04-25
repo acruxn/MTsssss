@@ -10,8 +10,9 @@ echo "📦 Packaging Lambda..."
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-# Install deps into build dir
-pip install -r "$BACKEND_DIR/requirements.txt" -t "$BUILD_DIR" --quiet
+# Install deps into build dir (targeting Lambda's Linux x86_64)
+pip install -r "$BACKEND_DIR/requirements.txt" -t "$BUILD_DIR" --quiet \
+    --platform manylinux2014_x86_64 --only-binary=:all: --implementation cp --python-version 3.12
 
 # Copy app code
 cp -r "$BACKEND_DIR"/*.py "$BUILD_DIR/" 2>/dev/null || true
