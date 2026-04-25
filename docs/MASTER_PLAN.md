@@ -1,7 +1,7 @@
 # FormBuddy — Project Master Plan
 ## TNG Digital FinHack 2026 | Track 1: Financial Inclusion
 
-> Single source of truth. Last updated: 26 Apr 2026, 3:15 AM MYT
+> Single source of truth. Last updated: 26 Apr 2026, 4:28 AM MYT
 
 ---
 
@@ -465,6 +465,18 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 - [x] Routes: all /agent?action=X replaced with /task?action=X or dedicated pages
 - [x] Routes: only floating mic button → /agent (TNGHome + AppShell)
 - [x] Services: scan_pay → /scan in direct map
+
+### Phase 12: Bottom Sheet Chat Panel ✅ DONE (26 Apr 2026, 4:28 AM)
+- [x] ChatPanel: bottom sheet overlay (60% height) with chat bubbles, mic, text input
+- [x] ChatPanel: three states — hidden, expanded, pill (minimized status bar)
+- [x] ChatPanel: multi-turn conversation, TTS, check_balance inline
+- [x] ChatPanel: on action classified → fires onAction callback → auto-minimizes to pill
+- [x] AppShell: floating mic button toggles ChatPanel (not navigate to /agent)
+- [x] AppShell: onAction navigates to form page with ?prefill=1&field=value params
+- [x] App.tsx: /agent route removed — assistant is overlay, not page
+- [x] Form pages: TransferPage, FuelPage, ReloadPage, BillPage, TaskPage read URL prefill params
+- [x] Form pages: show "Pre-filled by FormBuddy" banner when prefilled
+- [x] ChatPanel contained within phone frame (absolute, not fixed positioning)
 
 ### Future Enhancements
 - Bedrock Converse API for native multi-turn (currently frontend-managed history)
