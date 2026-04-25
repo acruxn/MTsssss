@@ -83,12 +83,13 @@ export interface DetectIntentResult {
   confidence: number;
   confirmation_message: string | null;
   detected_language: string;
+  chat_response: string | null;
 }
 
-export const detectIntent = (transcript: string, language: string) =>
+export const detectIntent = (transcript: string, language: string, messages?: Array<{role: string; content: string}>) =>
   request<DetectIntentResult>("/voice/detect-intent", {
     method: "POST",
-    body: JSON.stringify({ transcript, language }),
+    body: JSON.stringify({ transcript, language, messages: messages || null }),
   });
 
 // --- User & Payment types ---

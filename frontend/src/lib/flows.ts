@@ -35,10 +35,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
   }
 
   if (actionType === "check_balance") {
-    return {
-      title: "Check Balance", icon: "💰",
-      steps: [{ label: "Your Balance", value: "RM 1,234.56", type: "receipt" }],
-    };
+    return null;  // Handled directly in Agent.tsx with real API call
   }
 
   if (actionType === "scan_pay") {
@@ -139,6 +136,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
       steps: [
         { label: "Insurance Type", field: "insurance_type", value: s(fields.insurance_type), type: "input", autoAdvanceMs: 800 },
         { label: "Coverage", field: "coverage", value: s(fields.coverage), type: "input", autoAdvanceMs: 800 },
+        { label: "Premium (RM)", field: "amount", value: amt || "50", type: "input", autoAdvanceMs: 800 },
         { label: `Purchase ${s(fields.insurance_type) || "insurance"}?`, type: "confirm" },
         { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Purchase Successful", type: "receipt" },
@@ -179,6 +177,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Type", field: "type", value: s(fields.type) || "Movie", type: "input", autoAdvanceMs: 800 },
         { label: "Destination", field: "destination", value: s(fields.destination), type: "input", autoAdvanceMs: 800 },
         { label: "Date", field: "date", value: s(fields.date), type: "input", autoAdvanceMs: 800 },
+        { label: "Price (RM)", field: "amount", value: amt || "35", type: "input", autoAdvanceMs: 800 },
         { label: `Book ${s(fields.type) || "ticket"}?`, type: "confirm" },
         { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Booking Confirmed", type: "receipt" },
@@ -192,6 +191,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
       steps: [
         { label: "Restaurant", field: "restaurant", value: s(fields.restaurant), type: "input", autoAdvanceMs: 800 },
         { label: "Items", field: "items", value: s(fields.items), type: "input", autoAdvanceMs: 800 },
+        { label: "Total (RM)", field: "amount", value: amt || "25", type: "input", autoAdvanceMs: 800 },
         { label: `Order from ${s(fields.restaurant) || "restaurant"}?`, type: "confirm" },
         { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Order Placed", type: "receipt" },

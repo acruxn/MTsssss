@@ -25,6 +25,7 @@ ai = AIService()
 async def detect_intent(
     transcript: str = Body(..., embed=True),
     language: str = Body("en", embed=True),
+    messages: list = Body(None, embed=True),
     db: Session = Depends(get_db),
 ):
     """Detect user intent from free speech — returns form template match or quick action."""
@@ -33,7 +34,7 @@ async def detect_intent(
         {"id": t.id, "name": t.name, "category": t.category, "fields": json.loads(t.fields)}
         for t in templates
     ]
-    result = await ai.detect_intent(transcript, template_list, language)
+    result = await ai.detect_intent(transcript, template_list, language, messages=messages)
     return result
 
 

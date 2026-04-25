@@ -39,7 +39,7 @@ if STRANDS_AVAILABLE:
     ) -> dict:
         """Detect user intent from speech. Call this tool with the detected action.
 
-        action_type must be one of: form_fill, fuel_payment, check_balance, scan_pay, pin_reload, pay_toll, pay_parking, buy_insurance, apply_loan, invest, buy_ticket, food_delivery, donate, unknown
+        action_type must be one of: form_fill, fuel_payment, check_balance, scan_pay, pin_reload, pay_toll, pay_parking, buy_insurance, apply_loan, invest, buy_ticket, food_delivery, donate, chat, unknown
         """
         global _last_tool_result
         _last_tool_result = {
@@ -181,14 +181,19 @@ class AIService:
             "bedrock": bedrock_result,
         }
 
-    async def detect_intent(self, transcript: str, templates: list, language: str) -> Dict:
+    async def detect_intent(self, transcript: str, templates: list, language: str, messages: list = None) -> Dict:
         """Detect user intent using Strands Agent (preferred) or Bedrock tool_use fallback."""
         template_desc = "\n".join(
             f"- Template '{t['name']}' (id={t['id']}, category={t['category']}): fields={[f['name'] for f in t['fields']]}"
             for t in templates
         )
+        if messages:
+            history = "\n".join(f"{'User' if m.get('role')=='user' else 'Assistant'}: {m.get('content','')}" for m in messages[-6:])
+            user_said = f"CONVERSATION HISTORY:\n{history}\n\nNow the user said: \"{transcript}\" (language hint: {language})"
+        else:
+            user_said = f"A user said: \"{transcript}\" (language hint: {language})"
         prompt = (
-            f"A user said: \"{transcript}\" (language hint: {language})\n\n"
+            f"{user_said}\n\n"
             f"QUICK ACTIONS — check these FIRST, they take priority over form templates:\n"
             f"- \"fuel_payment\": pay for fuel/petrol/minyak/pump (params: fuel_type, amount, station)\n"
             f"- \"check_balance\": check eWallet balance/baki/how much money/berapa (NO params needed)\n"
@@ -214,6 +219,9 @@ class AIService:
             f"7. Set detected_language to the language the user ACTUALLY spoke (detect from transcript, not the hint)\n"
             f"8. Write confirmation_message in the SAME language the user spoke\n"
             f"9. For Malay input, respond in Malay. For English, respond in English. For mixed/rojak, respond in the dominant language.\n"
+            f"10. If the user's request is vague, greeting, or you need more info, use action_type='chat' and write a helpful chat_response asking what they need.\n"
+            f"11. Examples of 'chat': 'hello', 'I need help', 'what can you do', 'hi', 'tolong saya'\n"
+            f"12. For 'chat', set confidence to 0.0 and fields to empty {{}}\n"
             f"Call the detect_intent_tool with your analysis."
         )
 
@@ -260,7 +268,7 @@ class AIService:
                     "type": "string",
                     "enum": ["form_fill", "fuel_payment", "check_balance", "scan_pay", "pin_reload", "bill_payment",
                             "pay_toll", "pay_parking", "buy_insurance", "apply_loan", "invest",
-                            "buy_ticket", "food_delivery", "donate", "unknown"],
+                            "buy_ticket", "food_delivery", "donate", "chat", "unknown"],
                     "description": "The detected action type",
                 },
                 "template_id": {"type": "integer", "description": "Form template ID if action_type is form_fill"},
@@ -270,6 +278,7 @@ class AIService:
                 "confidence": {"type": "number", "description": "Confidence score 0.0-1.0"},
                 "confirmation_message": {"type": "string", "description": "Short confirmation message for the user in the SAME language they spoke"},
                 "detected_language": {"type": "string", "enum": ["en", "ms", "zh", "zh-HK", "ta"], "description": "Language the user spoke in: en=English, ms=Malay/BM, zh=Mandarin, zh-HK=Cantonese, ta=Tamil"},
+                "chat_response": {"type": "string", "description": "When action_type is 'chat', this is your conversational response to the user. Ask clarifying questions to understand what they need. Be friendly and helpful. Respond in the same language the user spoke."},
             },
             "required": ["action_type", "fields", "confidence", "confirmation_message", "detected_language"],
         }
@@ -280,7 +289,7 @@ class AIService:
         )
         if not result:
             return {"action_type": "unknown", "template_id": None, "template_name": None,
-                    "action_label": None, "fields": {}, "confidence": 0, "confirmation_message": None, "detected_language": "en"}
+                    "action_label": None, "fields": {}, "confidence": 0, "confirmation_message": None, "detected_language": "en", "chat_response": None}
         return {
             "action_type": result.get("action_type", "unknown"),
             "template_id": result.get("template_id"),
@@ -290,6 +299,7 @@ class AIService:
             "confidence": float(result.get("confidence", 0)),
             "confirmation_message": result.get("confirmation_message"),
             "detected_language": result.get("detected_language", "en"),
+            "chat_response": result.get("chat_response"),
         }
 
 

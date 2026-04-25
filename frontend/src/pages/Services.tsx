@@ -88,8 +88,8 @@ export default function Services({ onNavigate, language }: { onNavigate: (path: 
                 key={item.action}
                 onClick={() => {
                   if (item.soon) return;
-                  const direct: Record<string, string> = { fund_transfer: "/transfer", fuel_payment: "/fuel", pin_reload: "/reload", check_balance: "/balance", bill_payment: "/bill" };
-                  onNavigate(direct[item.action] || `/agent?action=${item.action}`);
+                  const direct: Record<string, string> = { fund_transfer: "/transfer", fuel_payment: "/fuel", pin_reload: "/reload", check_balance: "/balance", bill_payment: "/bill", scan_pay: "/scan" };
+                  onNavigate(direct[item.action] || `/task?action=${item.action}`);
                 }}
                 disabled={item.soon}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors enabled:active:bg-[#F8FAFC] disabled:opacity-50"

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   getTemplate, createSession, extractFields, completeSession, detectIntent,
-  postPayment, postTransfer,
+  postPayment, postTransfer, getBalance,
   type FormTemplate, type VoiceSession, type ExtractedFields,
 } from "../lib/api";
 import { speak, stopSpeaking } from "../lib/speech";
@@ -12,6 +12,8 @@ interface SpeechRecognitionEvent {
   results: { [index: number]: { [index: number]: { transcript: string } }; length: number };
   resultIndex: number;
 }
+
+interface ChatMessage { role: "user" | "assistant"; content: string; }
 
 type Phase = "idle" | "listening" | "processing" | "flow" | "success";
 
@@ -47,8 +49,12 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
   const [confirmMsg, setConfirmMsg] = useState("");
   const [showTypeInput, setShowTypeInput] = useState(false);
   const [flow, setFlow] = useState<ActionFlow | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [apiResult, setApiResult] = useState<{balance?: number; transaction_id?: number; warnings?: string[]} | null>(null);
   const recognitionRef = useRef<ReturnType<typeof Object> | null>(null);
   const listeningRef = useRef(false);
+  const handleDoneRef = useRef<() => void>(() => {});
+  const pendingTextRef = useRef("");
 
   const params = new URLSearchParams(window.location.search);
   const actionParam = params.get("action") || "";
@@ -91,9 +97,10 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
 
   async function handleDone() {
     stopRecognition();
-    const text = transcript.trim();
+    const text = (pendingTextRef.current || transcript).trim();
+    pendingTextRef.current = "";
     if (!text) return;
-    setPhase("processing"); setError("");
+    setPhase("processing"); setError(""); setTranscript("");
     try {
       if (templateParam && template) {
         let sess = session;
@@ -110,8 +117,48 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
         const f = getFlow("form_fill", mergedFields as Record<string, unknown>);
         if (f) { setFlow(f); setPhase("flow"); } else { setPhase("flow"); setFlow(null); }
       } else {
-        const ctx = actionParam ? `${ACTION_META[actionParam]?.label || actionParam}: ${text}` : text;
+        // Build context with conversation history
+        const historyCtx = messages.length > 0
+          ? messages.map(m => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`).join("\n") + "\nUser: " + text
+          : text;
+        const ctx = actionParam ? `${ACTION_META[actionParam]?.label || actionParam}: ${historyCtx}` : historyCtx;
         const result = await detectIntent(ctx, language);
+        const aType = result.action_type || (result.template_id ? "form_fill" : actionParam || "unknown");
+
+        // Chat response — stay in conversation
+        if (aType === "chat" && result.confirmation_message) {
+          setMessages(prev => [...prev, { role: "user", content: text }, { role: "assistant", content: result.confirmation_message! }]);
+          speak(result.confirmation_message, result.detected_language || language);
+          setPhase("listening"); startRecognition();
+          return;
+        }
+
+        // Check balance — handle inline
+        if (aType === "check_balance") {
+          try {
+            const bal = await getBalance();
+            const msg = `Your balance is RM ${bal.balance.toFixed(2)}`;
+            setMessages(prev => [...prev, { role: "user", content: text }, { role: "assistant", content: msg }]);
+            speak(msg, result.detected_language || language);
+          } catch {
+            const msg = "Sorry, I couldn't check your balance right now.";
+            setMessages(prev => [...prev, { role: "user", content: text }, { role: "assistant", content: msg }]);
+            speak(msg, language);
+          }
+          setPhase("listening"); startRecognition();
+          return;
+        }
+
+        // Unknown with no useful response
+        if (aType === "unknown" && !result.confirmation_message) {
+          const msg = "I didn't catch that. Could you tell me what you'd like to do? For example: send money, pay bills, or check balance.";
+          setMessages(prev => [...prev, { role: "user", content: text }, { role: "assistant", content: msg }]);
+          speak(msg, language);
+          setPhase("listening"); startRecognition();
+          return;
+        }
+
+        // Real action — enter flow
         if (result.template_id) {
           const tmpl = await getTemplate(result.template_id);
           setTemplate(tmpl);
@@ -119,18 +166,16 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
           for (const [k, v] of Object.entries(result.fields)) fields[k] = v != null ? String(v) : null;
           setExtracted(fields);
         }
-        setActionType(result.action_type || (result.template_id ? "form_fill" : actionParam || "unknown"));
+        setActionType(aType);
         setConfirmMsg(result.confirmation_message || "");
-        const aType = result.action_type || (result.template_id ? "form_fill" : actionParam || "unknown");
-        const f = getFlow(aType, result.fields);
-        if (result.template_id || result.action_type || result.confirmation_message) {
-          if (result.confirmation_message) await speak(result.confirmation_message, result.detected_language || language);
-          setFlow(f);
-          setPhase("flow");
-        } else {
-          setError("Couldn't understand your request. Try being more specific.");
-          setPhase("listening"); startRecognition();
+        setMessages(prev => [...prev, { role: "user", content: text }]);
+        if (result.confirmation_message) {
+          setMessages(prev => [...prev, { role: "assistant", content: result.confirmation_message! }]);
+          await speak(result.confirmation_message, result.detected_language || language);
         }
+        const f = getFlow(aType, result.fields);
+        setFlow(f);
+        setPhase("flow");
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -141,9 +186,11 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
   function handleReset() {
     stopSpeaking(); setPhase("idle"); setSession(null); setTranscript(""); setExtracted({});
     setError(""); setConfirmMsg(""); setActionType(""); setShowTypeInput(false);
-    setFlow(null);
+    setFlow(null); setMessages([]); setApiResult(null);
     if (!templateParam) setTemplate(null);
   }
+
+  handleDoneRef.current = handleDone;
 
   const meta = ACTION_META[actionType] || ACTION_META[actionParam] || null;
   const MicSvg = <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>;
@@ -197,6 +244,17 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
               <div className="flex flex-wrap gap-2">{template.fields.map(f => { const filled = extracted[f.name] && extracted[f.name] !== ""; return <span key={f.name} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border ${filled ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B]"}`}>{filled && <Chk c="w-3 h-3"/>}{f.label}{f.required && !filled && <span className="text-red-400">*</span>}</span>; })}</div>
             </div>
           )}
+          {messages.length > 0 && (
+            <div className="w-full space-y-3 mb-4 max-h-60 overflow-y-auto">
+              {messages.map((m, i) => (
+                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${m.role === "user" ? "bg-[#0066FF] text-white rounded-br-md" : "bg-[#F1F5F9] text-[#1E293B] rounded-bl-md"}`}>
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="relative my-6">
             <div className="absolute inset-0 rounded-full border-2 border-red-400/30 ripple-ring" style={{animationDelay:"0s"}}/>
             <div className="absolute inset-0 rounded-full border-2 border-red-400/20 ripple-ring" style={{animationDelay:"0.6s"}}/>
@@ -210,7 +268,7 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
           </div>
           {!showTypeInput ? <button onClick={() => setShowTypeInput(true)} className="text-xs text-[#0066FF] hover:underline mb-4">prefer to type?</button> : (
             <div className="w-full mb-4 animate-fadeIn">
-              <input type="text" placeholder="Type your request here..." className="w-full bg-white border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm text-[#1E293B] placeholder-[#94A3B8] focus:outline-none focus:border-[#0066FF] focus:ring-2 focus:ring-[#0066FF]/10" onKeyDown={e => { if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) setTranscript((e.target as HTMLInputElement).value.trim()); }}/>
+              <input type="text" placeholder="Type your request here..." className="w-full bg-white border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm text-[#1E293B] placeholder-[#94A3B8] focus:outline-none focus:border-[#0066FF] focus:ring-2 focus:ring-[#0066FF]/10" onKeyDown={e => { if (e.key === "Enter") { const v = (e.target as HTMLInputElement).value.trim(); if (v) { stopRecognition(); pendingTextRef.current = v; setTranscript(v); (e.target as HTMLInputElement).value = ""; handleDoneRef.current(); } } }}/>
               <p className="text-xs text-[#94A3B8] mt-1.5 ml-1">Press Enter to submit</p>
             </div>
           )}
@@ -233,6 +291,7 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
         <ActionFlowComponent
           flow={flow}
           fields={extracted as Record<string, unknown>}
+          apiResult={apiResult}
           onComplete={async () => {
             const amt = parseFloat(String(extracted.amount || extracted.jumlah || "0")) || 0;
             const recipient = String(extracted.recipient || extracted.penerima || "");

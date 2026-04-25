@@ -159,7 +159,7 @@ export default function GOfinance({ onNavigate }: { onNavigate: (path: string) =
             </div>
             <p className="text-center text-sm font-medium text-[#1E293B] mt-3 px-5">Get extra cash with a flexible plan just for you!</p>
             <div className="px-5 pb-5 pt-3">
-              <button onClick={() => onNavigate("/agent?action=apply_loan")} className="w-full py-3 rounded-full border-2 border-[#1E293B] text-sm font-semibold text-[#1E293B]">Apply now</button>
+              <button onClick={() => onNavigate("/task?action=apply_loan")} className="w-full py-3 rounded-full border-2 border-[#1E293B] text-sm font-semibold text-[#1E293B]">Apply now</button>
             </div>
           </div>
 
@@ -190,7 +190,7 @@ export default function GOfinance({ onNavigate }: { onNavigate: (path: string) =
                       { label: "Gold", cta: "Buy gold", color: "#D1D5DB" },
                       { label: "ASNB", cta: "Invest now", color: "#D1D5DB" },
                     ].map(item => (
-                      <button key={item.label} onClick={() => onNavigate("/agent?action=invest")} className="flex items-center justify-between w-full text-left">
+                      <button key={item.label} onClick={() => onNavigate("/task?action=invest")} className="flex items-center justify-between w-full text-left">
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
                           <div>

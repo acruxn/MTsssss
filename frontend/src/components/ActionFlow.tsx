@@ -6,6 +6,7 @@ interface ActionFlowProps {
   fields: Record<string, unknown>;
   onComplete: () => void;
   onCancel: () => void;
+  apiResult?: { balance?: number; transaction_id?: number; warnings?: string[] } | null;
 }
 
 const txnId = () => "TXN-" + Math.random().toString(36).slice(2, 10).toUpperCase();
@@ -87,7 +88,7 @@ function TypeWriter({ text, onDone }: { text: string; onDone: () => void }) {
   );
 }
 
-export default function ActionFlow({ flow, fields, onComplete, onCancel }: ActionFlowProps) {
+export default function ActionFlow({ flow, fields, onComplete, onCancel, apiResult }: ActionFlowProps) {
   const [step, setStep] = useState(0);
   const [stepDone, setStepDone] = useState(false);
   const [slideDir, setSlideDir] = useState<"in" | "out">("in");
@@ -197,18 +198,29 @@ export default function ActionFlow({ flow, fields, onComplete, onCancel }: Actio
             ))}
             <div className="px-5 py-3 flex justify-between">
               <span className="text-sm text-[#64748B]">Transaction ID</span>
-              <span className="text-xs font-mono text-[#94A3B8]">{txnId()}</span>
+              <span className="text-xs font-mono text-[#94A3B8]">{apiResult?.transaction_id ? `TXN-${apiResult.transaction_id}` : txnId()}</span>
             </div>
             <div className="px-5 py-3 flex justify-between">
               <span className="text-sm text-[#64748B]">Date & Time</span>
               <span className="text-sm text-[#1E293B]">{now()}</span>
             </div>
+            {apiResult?.balance != null && (
             <div className="px-5 py-3 flex justify-between bg-[#F8FAFC]">
               <span className="text-sm font-medium text-[#64748B]">Updated Balance</span>
-              <span className="text-sm font-bold text-[#1E293B]">RM 1,184.56</span>
+              <span className="text-sm font-bold text-[#1E293B]">{`RM ${apiResult.balance.toFixed(2)}`}</span>
             </div>
+            )}
           </div>
         </div>
+        {apiResult?.warnings && apiResult.warnings.length > 0 && (
+          <div className="space-y-2 mb-4">
+            {apiResult.warnings.map((w, i) => (
+              <div key={i} className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-sm text-amber-700">
+                <span>&#9888;&#65039;</span><span>{w}</span>
+              </div>
+            ))}
+          </div>
+        )}
         <button
           onClick={onComplete}
           className="w-full bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-xl py-3.5 font-medium transition-colors"
