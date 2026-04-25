@@ -113,6 +113,23 @@ class AIService:
         }
 
 
+    async def detect_intent(self, transcript: str, templates: list, language: str) -> dict:
+        """Identify which form template matches and extract fields."""
+        template_desc = "\n".join(
+            f"- Template '{t['name']}' (id={t['id']}, category={t['category']}): fields={[f['name'] for f in t['fields']]}"
+            for t in templates
+        )
+        prompt = (
+            f"You are FormBuddy. A user said: \"{transcript}\" (language: {language})\n\n"
+            f"Available form templates:\n{template_desc}\n\n"
+            f"1. Identify which template best matches the user's intent.\n"
+            f"2. Extract any field values mentioned in the transcript.\n"
+            f"Return JSON: {{\"template_id\": <int>, \"template_name\": <str>, \"fields\": {{<field_name>: <value>}}, \"confidence\": <0.0-1.0>}}"
+        )
+        raw = await self.ask_bedrock(prompt)
+        return _parse_json(raw) if raw else {"template_id": None, "fields": {}, "confidence": 0}
+
+
 def _parse_json(text: str) -> Optional[dict]:
     try:
         return json.loads(text)

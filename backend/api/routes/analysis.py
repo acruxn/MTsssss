@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from core.database import get_db
@@ -13,10 +13,28 @@ from schemas.transaction import (
     ExtractedFields, FieldDefinition,
 )
 from services.fraud_service import FormService
+from services.ai_service import AIService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/voice", tags=["Voice"])
 form_service = FormService()
+ai = AIService()
+
+
+@router.post("/detect-intent")
+async def detect_intent(
+    transcript: str = Body(..., embed=True),
+    language: str = Body("en", embed=True),
+    db: Session = Depends(get_db),
+):
+    """Detect user intent from free speech, match to a form template, and extract fields."""
+    templates = db.query(FormTemplate).all()
+    template_list = [
+        {"id": t.id, "name": t.name, "category": t.category, "fields": json.loads(t.fields)}
+        for t in templates
+    ]
+    result = await ai.detect_intent(transcript, template_list, language)
+    return result
 
 
 @router.post("/sessions", response_model=VoiceSessionResponse)
