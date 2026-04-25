@@ -27,6 +27,7 @@ app = FastAPI(
     description="Multilingual voice-powered form-filling assistant (Malay, English, Chinese, Tamil)",
     version="0.1.0",
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 app.add_middleware(

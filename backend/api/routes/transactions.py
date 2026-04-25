@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/forms", tags=["Forms"])
 
 
-@router.post("/", response_model=FormTemplateResponse)
+@router.post("", response_model=FormTemplateResponse)
 async def create_form(payload: FormTemplateCreate, db: Session = Depends(get_db)):
     """Create a new form template."""
     try:
@@ -32,7 +32,7 @@ async def create_form(payload: FormTemplateCreate, db: Session = Depends(get_db)
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/", response_model=List[FormTemplateResponse])
+@router.get("", response_model=List[FormTemplateResponse])
 async def list_forms(
     category: Optional[str] = None,
     language: Optional[str] = None,

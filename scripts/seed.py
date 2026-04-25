@@ -79,6 +79,46 @@ FORM_TEMPLATES = [
             {"name": "address", "label": "வீட்டு முகவரி", "type": "text", "required": True},
         ],
     },
+    {
+        "name": "Fund Transfer",
+        "category": "transfer",
+        "language": "en",
+        "fields": [
+            {"name": "recipient", "label": "Recipient Name", "type": "text", "required": True},
+            {"name": "amount", "label": "Amount (RM)", "type": "number", "required": True},
+            {"name": "reference", "label": "Reference", "type": "text", "required": False},
+        ],
+    },
+    {
+        "name": "Pindahan Wang",
+        "category": "transfer",
+        "language": "ms",
+        "fields": [
+            {"name": "penerima", "label": "Nama Penerima", "type": "text", "required": True},
+            {"name": "jumlah", "label": "Jumlah (RM)", "type": "number", "required": True},
+            {"name": "rujukan", "label": "Rujukan", "type": "text", "required": False},
+        ],
+    },
+    {
+        "name": "Bill Payment",
+        "category": "payment",
+        "language": "en",
+        "fields": [
+            {"name": "biller", "label": "Biller Name", "type": "text", "required": True},
+            {"name": "account_no", "label": "Account Number", "type": "text", "required": True},
+            {"name": "amount", "label": "Amount (RM)", "type": "number", "required": True},
+        ],
+    },
+    {
+        "name": "Prepaid Reload",
+        "category": "reload",
+        "language": "en",
+        "fields": [
+            {"name": "phone_number", "label": "Phone Number", "type": "phone", "required": True},
+            {"name": "amount", "label": "Amount (RM)", "type": "number", "required": True},
+            {"name": "carrier", "label": "Carrier", "type": "select", "required": True, "options": ["Maxis", "Celcom", "Digi", "U Mobile", "Yes"]},
+        ],
+    },
 ]
 
 
