@@ -10,7 +10,7 @@ interface SpeechRecognitionEvent {
   resultIndex: number;
 }
 
-type Phase = "idle" | "listening" | "processing" | "confirm" | "success";
+type Phase = "idle" | "listening" | "processing" | "confirm" | "authenticating" | "success";
 
 const LANG_MAP: Record<string, string> = { en: "en-US", ms: "ms-MY", zh: "zh-CN", ta: "ta-IN" };
 
@@ -97,7 +97,6 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
       } else {
         const ctx = actionParam ? `${ACTION_META[actionParam]?.label || actionParam}: ${text}` : text;
         const result = await detectIntent(ctx, language);
-        const r = result as unknown as Record<string, unknown>;
         if (result.template_id) {
           const tmpl = await getTemplate(result.template_id);
           setTemplate(tmpl);
@@ -106,10 +105,10 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
           setExtracted(fields);
         }
         setConfidence(result.confidence);
-        setActionType((r.action_type as string) || (result.template_id ? "form_fill" : actionParam || "unknown"));
-        setActionLabel((r.action_label as string) || result.template_name || ACTION_META[actionParam]?.label || "");
-        setConfirmMsg((r.confirmation_message as string) || "");
-        if (result.template_id || r.action_type || r.confirmation_message) {
+        setActionType(result.action_type || (result.template_id ? "form_fill" : actionParam || "unknown"));
+        setActionLabel(result.action_label || result.template_name || ACTION_META[actionParam]?.label || "");
+        setConfirmMsg(result.confirmation_message || "");
+        if (result.template_id || result.action_type || result.confirmation_message) {
           setPhase("confirm");
         } else {
           setError("Couldn't understand your request. Try being more specific.");
@@ -134,8 +133,14 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
 
   async function handleConfirm() {
     if (session) await completeSession(session.id).catch(() => {});
-    setPhase("success");
+    setPhase("authenticating");
   }
+
+  useEffect(() => {
+    if (phase !== "authenticating") return;
+    const t = setTimeout(() => setPhase("success"), 1500);
+    return () => clearTimeout(t);
+  }, [phase]);
 
   function handleSpeakAgain() { setTranscript(""); setError(""); setPhase("listening"); startRecognition(); }
 

@@ -75,10 +75,13 @@ export const getSessions = (limit: number = 20) =>
   request<VoiceSession[]>(`/voice/sessions?limit=${limit}`);
 
 export interface DetectIntentResult {
+  action_type: string;
   template_id: number | null;
-  template_name: string;
+  template_name: string | null;
+  action_label: string | null;
   fields: Record<string, unknown>;
   confidence: number;
+  confirmation_message: string | null;
 }
 
 export const detectIntent = (transcript: string, language: string) =>
