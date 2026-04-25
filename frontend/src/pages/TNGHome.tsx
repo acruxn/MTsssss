@@ -38,7 +38,6 @@ export default function TNGHome({ onNavigate }: { onNavigate: (path: string) => 
       <RecentTransactions onNavigate={onNavigate} txns={txns} />
       <NeedHelp />
       <Footer />
-      <FloatingMic onNavigate={onNavigate} />
     </div>
   );
 }
@@ -312,10 +311,3 @@ function Footer() {
   );
 }
 
-function FloatingMic({ onNavigate }: { onNavigate: (p: string) => void }) {
-  return (
-    <button onClick={() => onNavigate("/agent")} className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg mic-pulse active:scale-90 transition-transform" style={{ background: "#0066FF" }} aria-label="Open FormBuddy">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-    </button>
-  );
-}

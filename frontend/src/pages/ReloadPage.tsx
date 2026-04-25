@@ -15,6 +15,15 @@ export default function ReloadPage({ onNavigate }: { onNavigate: (path: string) 
 
   useEffect(() => { getBalance().then(r => setBalance(r.balance)).catch(() => {}); }, []);
 
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("prefill") === "1") {
+      if (p.get("phone")) setPhone(p.get("phone")!);
+      if (p.get("amount")) setAmount(p.get("amount")!);
+      if (p.get("carrier")) setCarrier(p.get("carrier")!);
+    }
+  }, []);
+
   const amt = parseFloat(amount) || 0;
   const canSubmit = phone.trim().length >= 9 && amt > 0 && amt <= balance;
 
@@ -64,6 +73,11 @@ export default function ReloadPage({ onNavigate }: { onNavigate: (path: string) 
           <p className="text-2xl font-bold text-gray-900">RM {balance.toFixed(2)}</p>
         </div>
         <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4">
+          {new URLSearchParams(window.location.search).get("prefill") === "1" && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5 text-sm text-blue-700 flex items-center gap-2">
+              <span>🤖</span> Pre-filled by FormBuddy — review and confirm
+            </div>
+          )}
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1 block">Phone Number</label>
             <div className="flex gap-2">

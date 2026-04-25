@@ -14,6 +14,15 @@ export default function BillPage({ onNavigate }: { onNavigate: (path: string) =>
 
   useEffect(() => { getBalance().then(r => setBalance(r.balance)).catch(() => {}); }, []);
 
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("prefill") === "1") {
+      if (p.get("biller")) setBiller(p.get("biller")!);
+      if (p.get("account_no")) setAccountNo(p.get("account_no")!);
+      if (p.get("amount")) setAmount(p.get("amount")!);
+    }
+  }, []);
+
   const amt = parseFloat(amount) || 0;
   const canSubmit = biller.trim() && accountNo.trim() && amt > 0 && amt <= balance;
 
@@ -96,6 +105,11 @@ export default function BillPage({ onNavigate }: { onNavigate: (path: string) =>
           <p className="text-2xl font-bold text-gray-900">RM {balance.toFixed(2)}</p>
         </div>
         <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4">
+          {new URLSearchParams(window.location.search).get("prefill") === "1" && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5 text-sm text-blue-700 flex items-center gap-2">
+              <span>🤖</span> Pre-filled by FormBuddy — review and confirm
+            </div>
+          )}
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1 block">Biller Name</label>
             <input value={biller} onChange={e => setBiller(e.target.value)} placeholder="e.g. TNB, Unifi, Astro" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF]/20" />

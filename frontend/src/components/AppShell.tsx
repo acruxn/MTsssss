@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { getAccounts, switchAccount, resetAccounts, type DemoAccount } from "../lib/api";
+import ChatPanel from "./ChatPanel";
 
 /* ── Tab SVG Icons (matching TNG's outlined style) ── */
 const HomeIcon = ({ active }: { active: boolean }) => (
@@ -84,6 +85,7 @@ export default function AppShell({
 }) {
   const [langOpen, setLangOpen] = useState(false);
   const [acctOpen, setAcctOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [accounts, setAccounts] = useState<DemoAccount[]>([]);
   const [activeUser, setActiveUser] = useState("Ahmad Razak");
   const basePath = currentPath.split("?")[0];
@@ -162,7 +164,7 @@ export default function AppShell({
 
   const formBuddyPill = (
     <button
-      onClick={() => onNavigate("/agent")}
+      onClick={() => setChatOpen(prev => !prev)}
       className="absolute right-4 -top-12 z-40 flex items-center gap-1.5 bg-[#0066FF] text-white pl-3 pr-3.5 py-2 rounded-full shadow-lg shadow-blue-500/30 hover:bg-[#0052CC] transition-colors text-xs font-semibold"
       aria-label="Open FormBuddy voice assistant"
     >
@@ -209,6 +211,38 @@ export default function AppShell({
     </div>
   );
 
+  const chatPanel = (
+    <ChatPanel
+      isOpen={chatOpen}
+      onClose={() => setChatOpen(false)}
+      onAction={({ actionType, fields }) => {
+        setChatOpen(false);
+        const params = new URLSearchParams({ prefill: "1" });
+        Object.entries(fields).forEach(([k, v]) => { if (v != null) params.set(k, String(v)); });
+        const q = params.toString();
+        const routes: Record<string, string> = {
+          fund_transfer: "/transfer", form_fill: "/transfer",
+          fuel_payment: "/fuel", pin_reload: "/reload",
+          bill_payment: "/bill", scan_pay: "/scan",
+        };
+        const route = routes[actionType] || `/task?action=${actionType}`;
+        onNavigate(route + (route.includes("?") ? "&" : "?") + q);
+      }}
+      language={language}
+    />
+  );
+
+  const floatingMic = (
+    <button
+      onClick={() => setChatOpen(prev => !prev)}
+      className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg mic-pulse active:scale-90 transition-transform"
+      style={{ background: "#0066FF" }}
+      aria-label="Open FormBuddy"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+    </button>
+  );
+
   return (
     <>
       {/* Desktop: phone frame */}
@@ -217,6 +251,7 @@ export default function AppShell({
           {statusBar}
           <main className="flex-1 overflow-y-auto bg-[#F5F5F5]">{children}</main>
           {tabBar}
+          {chatPanel}
         </div>
       </div>
 
@@ -225,6 +260,8 @@ export default function AppShell({
         {statusBar}
         <main className="flex-1 overflow-y-auto pb-20">{children}</main>
         <div className="fixed bottom-0 inset-x-0 z-50">{tabBar}</div>
+        {floatingMic}
+        {chatPanel}
       </div>
     </>
   );

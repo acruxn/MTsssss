@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getFlow } from "../lib/flows";
 import { postTransfer, postPayment } from "../lib/api";
 
@@ -32,6 +32,17 @@ export default function TaskPage({ onNavigate }: { onNavigate: (path: string) =>
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ message: string; balance?: number; warnings?: string[] } | null>(null);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("prefill") === "1") {
+      setValues(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(k => { if (p.get(k)) updated[k] = p.get(k)!; });
+        return updated;
+      });
+    }
+  }, []);
 
   if (!flow || !meta) return (
     <div className="px-4 py-12 text-center">
@@ -81,6 +92,11 @@ export default function TaskPage({ onNavigate }: { onNavigate: (path: string) =>
       <h1 className="text-xl font-bold text-[#1E293B] mb-1">{meta.icon} {meta.label}</h1>
       <p className="text-sm text-[#64748B] mb-6">Fill in the details below</p>
       {error && <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 text-sm text-red-700">{error}</div>}
+      {new URLSearchParams(window.location.search).get("prefill") === "1" && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5 mb-4 text-sm text-blue-700 flex items-center gap-2">
+          <span>🤖</span> Pre-filled by FormBuddy — review and confirm
+        </div>
+      )}
       <div className="space-y-4">
         {formSteps.map(step => (
           <div key={step.field || step.label}>
