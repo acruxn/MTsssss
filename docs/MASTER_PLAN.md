@@ -1,7 +1,7 @@
 # FormBuddy — Project Master Plan
 ## TNG Digital FinHack 2026 | Track 1: Financial Inclusion
 
-> Single source of truth. Last updated: 25 Apr 2026, 6:20 PM MYT
+> Single source of truth. Last updated: 25 Apr 2026, 8:40 PM MYT
 
 ---
 
@@ -74,12 +74,17 @@ FormBuddy lives inside the TNG app as a floating mic button. Users speak natural
 │  │ /api/v1/forms         — Form template CRUD     │  │
 │  │ /api/v1/voice/extract — Transcript → fields    │  │
 │  │ /api/v1/voice/detect-intent — Smart agent      │  │
+│  │   └─ Bedrock tool_use (schema-enforced JSON)   │  │
+│  │   └─ Retry logic (1 retry on failure)          │  │
+│  │   └─ Actions: form_fill, fuel_payment,         │  │
+│  │      check_balance, scan_pay, pin_reload       │  │
 │  │ /api/v1/voice/sessions— Session management     │  │
 │  │ /api/v1/dashboard/stats— Completion metrics    │  │
 │  └────────────────────────┬───────────────────────┘  │
 │                           │                          │
 │  Bedrock Claude Sonnet 4  │  Amplify (HTTPS hosting) │
-│  (intent + extraction AI) │                          │
+│  (tool_use for intent +   │  CloudWatch (5min warm)  │
+│   extraction AI)          │                          │
 └───────────────────────────┼──────────────────────────┘
                             │
                             ▼
@@ -108,28 +113,29 @@ IaC: Terraform (alicloud + aws providers)
 
 ## 4. VERIFIED RESOURCE ACCESS
 
-Tested 25 Apr 2026, 2:30 PM MYT with hackathon credentials.
+Tested 25 Apr 2026, 8:30 PM MYT — all live and deployed.
 
 ### AWS — ap-southeast-1
 
-| Service | Status | Model/Details |
-|---------|--------|---------------|
-| **Bedrock** | ✅ TESTED | `apac.anthropic.claude-sonnet-4-20250514-v1:0` — correctly extracts fields from Malay |
-| **Lambda** | ✅ accessible | |
-| **S3** | ✅ accessible | For frontend static hosting |
-| **IAM** | ✅ accessible | Can create Lambda execution roles |
-| **Transcribe** | ✅ accessible | Backup STT |
-| **Polly** | ✅ accessible | Backup TTS (Chinese voices) |
-| CloudFront | ❌ AccessDenied | Not needed — use S3 website hosting |
+| Service | Status | Details |
+|---------|--------|---------|
+| **Bedrock** | ✅ LIVE | `apac.anthropic.claude-sonnet-4-20250514-v1:0` — tool_use for structured JSON |
+| **Lambda** | ✅ LIVE | `finhack-backend-dev`, 512MB, 60s timeout, Python 3.12 |
+| **API Gateway** | ✅ LIVE | HTTP API `w6qtfxl2va` — primary backend entry point |
+| **Amplify** | ✅ LIVE | `d3is7aj4mo28yv` — HTTPS frontend with SPA routing |
+| **S3** | ✅ EXISTS | `finhack-frontend-dev` — superseded by Amplify |
+| **IAM** | ✅ LIVE | `finhack-lambda-role-dev` with Bedrock invoke permission |
+| **CloudWatch Events** | ✅ LIVE | `formbuddy-warmup` — pings Lambda every 5 min |
+| CloudFront | ❌ Blocked | Org SCP — not needed (Amplify provides HTTPS) |
 
 ### Alibaba Cloud — ap-southeast-3
 
 | Service | Status | Details |
 |---------|--------|---------|
-| **OceanBase API** | ✅ accessible | 0 instances — need to create |
-| **OSS** | ✅ accessible | 0 buckets — can create |
-| **ECS** | ✅ accessible | Available if needed |
-| DashScope (Qwen) | ❌ Needs separate API key | Console-only creation, URL: modelstudio.console.alibabacloud.com |
+| **RDS MySQL** | ✅ LIVE | `rm-zf8cjweha7koh7btt` — finhack-formbuddy, MySQL 8.0, KL |
+| OceanBase | ❌ Blocked | STS billing permission blocks CreateInstance order (D9) |
+| OSS | ✅ Accessible | 0 buckets — available if needed |
+| DashScope (Qwen) | ❌ | Needs separate API key from console |
 
 ### Credentials
 
@@ -146,10 +152,10 @@ Tested 25 Apr 2026, 2:30 PM MYT with hackathon credentials.
 |-------|-----------|-------|----------|
 | **Voice I/O** | Web Speech API | Browser (free) | N/A — browser native |
 | **AI** | Bedrock Claude Sonnet 4 | AWS ap-southeast-1 | ✅ Tested |
-| **Backend** | FastAPI + Mangum (Lambda) | AWS ap-southeast-1 | ✅ Access confirmed |
-| **Database** | OceanBase (MySQL-compatible) | Alibaba ap-southeast-3 | ✅ API accessible |
-| **Storage** | OSS | Alibaba ap-southeast-3 | ✅ Accessible |
-| **Frontend** | React + TypeScript + Tailwind + Vite | Local dev / S3 | ✅ S3 accessible |
+| **AI Method** | tool_use (schema-enforced JSON) | AWS Bedrock | ✅ Reliable structured output |
+| **Backend** | FastAPI + Mangum (Lambda) | AWS ap-southeast-1 | ✅ Live, 60s timeout |
+| **Database** | RDS MySQL 8.0 (OceanBase-compatible) | Alibaba ap-southeast-3 | ✅ Live in KL |
+| **Frontend** | React 19 + TypeScript + Tailwind 4 + Vite 8 | AWS Amplify (HTTPS) | ✅ Live |
 | **IaC** | Terraform (alicloud + aws) | Both | ✅ Both providers work |
 | **HTTP client** | Native fetch | Browser | No axios (supply chain attack Mar 2026) |
 
@@ -199,9 +205,9 @@ AI receives transcript + field definitions → returns extracted values:
 | Form | Fields | Languages |
 |------|--------|-----------|
 | Fund Transfer | recipient, amount, reference | EN, MS |
-| Bill Payment | biller, account_no, amount | EN, MS |
-| eWallet Registration | full_name, ic_number, phone | EN, MS, ZH, TA |
-| Prepaid Reload | phone_number, amount, carrier | EN, MS |
+| Bill Payment | biller, account_no, amount | EN |
+| Prepaid Reload | phone_number, amount, carrier | EN |
+| Bank Account Opening | full_name, ic_number, phone, account_type | EN, MS |
 
 ---
 
@@ -220,37 +226,31 @@ Primary voice I/O is browser-native. All 4 languages work. Bedrock handles the i
 
 ## 9. DEPLOYMENT STRATEGY
 
-### Demo Day (Primary): Local
+### Demo Day (Primary): Fully Deployed — No Local
 ```
-Frontend: npm run dev → localhost:5173
-Backend:  uvicorn main:app → localhost:8000
-Database: OceanBase on Alibaba Cloud (remote)
-AI:       Bedrock on AWS (remote)
+Frontend: AWS Amplify (HTTPS) — https://main.d3is7aj4mo28yv.amplifyapp.com
+Backend:  Lambda + API Gateway — https://w6qtfxl2va.execute-api.ap-southeast-1.amazonaws.com
+Database: Alibaba Cloud RDS MySQL (KL) — finhack-formbuddy.mysql.kualalumpur.rds
+AI:       Bedrock on AWS (tool_use, schema-enforced JSON)
+Warmup:   CloudWatch pings Lambda every 5 min
 ```
-Zero deployment risk. Judges see the product, not the infra.
+Everything runs in the cloud. Zero local dependency. Judges can open the URL on their own phone.
 
-### Cloud (If Time Permits): Lambda + S3
-```
-Frontend: S3 static website hosting (no CloudFront needed)
-Backend:  Lambda + Function URL
-Deploy:   ./scripts/deploy-lambda.sh
-```
-
-### Database Options (In Order of Preference)
-1. OceanBase on Alibaba Cloud (create via console)
-2. Local MySQL via Docker (`docker run -p 3306:3306 mysql:8`) — same pymysql driver, zero code change
-3. SQLite for absolute minimum viable (change one connection string)
+### Database
+- **Production**: Alibaba Cloud RDS MySQL 8.0 in Kuala Lumpur (live)
+- **Migration path**: OceanBase — same pymysql driver, zero code change
+- **Fallback**: SQLite at `/tmp/formbuddy.db` (Lambda auto-seeds on cold start)
 
 ---
 
 ## 10. PITCH DECK (8 slides)
 
 1. **Problem** — Digital form barriers exclude millions from financial services
-2. **Solution** — FormBuddy: voice-powered form filling in 4 languages
-3. **Live Demo** — Judge speaks BM → form fills live
-4. **How It Works** — Architecture: Browser voice → Lambda → Bedrock AI → OceanBase
-5. **Platform** — Any form, any language. Implementors define templates + webhooks
-6. **Technology** — OceanBase (Alibaba), Bedrock (AWS), Terraform, Web Speech API
+2. **Solution** — FormBuddy: voice-powered AI agent inside TNG eWallet
+3. **Live Demo** — Judge speaks BM → AI pays for fuel live
+4. **How It Works** — Architecture: Browser voice → Lambda → Bedrock AI (tool_use) → Alibaba RDS
+5. **Platform** — Any TNG action by voice. Form filling is one capability.
+6. **Technology** — Alibaba Cloud RDS (OceanBase-compatible), AWS Bedrock (tool_use), Terraform, Web Speech API
 7. **Impact** — Elderly, migrant workers, low-literacy communities
 8. **Future** — Visa integration, WhatsApp bot, offline Whisper, BNM compliance
 
@@ -300,6 +300,7 @@ Deploy:   ./scripts/deploy-lambda.sh
 | D10 | AWS Amplify for HTTPS frontend hosting | S3 website hosting is HTTP-only, CloudFront blocked by org SCP. Amplify gives HTTPS + SPA routing for free. Web Speech API requires HTTPS. | 25 Apr 2026 |
 | D11 | API Gateway HTTP API instead of Lambda Function URL | Function URL returns 403 (org SCP). HTTP API works, simpler than REST API, supports Lambda proxy + CORS. | 25 Apr 2026 |
 | D12 | Pivot from "form filler" to "built-in TNG AI agent" | FormBuddy is not just a form filler — it's a full AI assistant inside TNG eWallet. Understands intent (fuel, transfer, bills, loans), extracts params, confirms, executes. Form filling is one capability. | 25 Apr 2026 |
+| D13 | Bedrock tool_use instead of prompt-based JSON | Prompt-based JSON was unreliable (~50% — markdown fences, prose). Structured Outputs (output_config) not supported on apac. cross-region model. tool_use with forced tool_choice gives schema-enforced JSON ~90%+. Added retry logic for remaining edge cases. | 25 Apr 2026 |
 
 ---
 
@@ -329,9 +330,14 @@ Deploy:   ./scripts/deploy-lambda.sh
 - [x] Live tested: fuel_payment ✅, check_balance ✅, form_fill ✅, scan_pay ✅
 
 ### Phase 7: Polish + Demo Prep ⏳ IN PROGRESS
-- [ ] Fix CSS animations (ripple-ring, popIn, eq-bar class not wired)
-- [ ] End-to-end live flow test (speak → confirm → success)
-- [ ] Mock Face ID / biometric confirmation step
+- [x] Fix CSS animations (ripple-ring, popIn, eq-bar class not wired)
+- [x] End-to-end live flow test (speak → confirm → success)
+- [x] Mock Face ID / biometric confirmation step
+- [x] TNG-branded app shell (yellow Scan, bottom tabs, FormBuddy pill)
+- [x] TNG-authentic home screen (Reload/Transaction CTAs, promo banners)
+- [x] Bedrock tool_use for reliable structured JSON
+- [x] Retry logic (1 retry on Bedrock failure)
+- [x] Lambda 60s timeout + CloudWatch 5min warmup
 - [ ] Update pitch-deck.html with new screenshots
 - [ ] Rehearse demo script
 - [ ] Record demo video (optional)
