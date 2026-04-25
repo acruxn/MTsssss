@@ -20,19 +20,19 @@ export default function Layout({
   onLanguageChange: (lang: string) => void;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
-      <nav className="bg-gray-900/80 backdrop-blur-sm border-b border-gray-800 px-6 py-3 flex items-center gap-6 sticky top-0 z-50">
-        <button onClick={() => onNavigate("/")} className="text-lg font-bold text-blue-400">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B]">
+      <nav className="bg-[#0066FF] px-6 py-3 flex items-center gap-6 sticky top-0 z-50 shadow-md">
+        <button onClick={() => onNavigate("/")} className="text-lg font-bold text-white">
           🎙️ FormBuddy
         </button>
         {navItems.map((item) => (
           <button
             key={item.href}
             onClick={() => onNavigate(item.href)}
-            className={`text-sm ${
+            className={`text-sm transition-colors ${
               currentPath === item.href || currentPath.startsWith(item.href + "?")
-                ? "text-white font-medium"
-                : "text-gray-400 hover:text-white"
+                ? "text-white font-semibold"
+                : "text-blue-100 hover:text-white"
             }`}
           >
             {item.label}
@@ -41,15 +41,14 @@ export default function Layout({
         <select
           value={language}
           onChange={(e) => onLanguageChange(e.target.value)}
-          className="ml-auto bg-gray-800 text-white border border-gray-700 rounded-lg px-2 py-1 text-sm"
+          className="ml-auto bg-white/20 text-white border border-white/30 rounded-lg px-2 py-1 text-sm backdrop-blur-sm"
         >
-          <option value="all">🌐 All Languages</option>
-          <option value="en">🇬🇧 English</option>
-          <option value="ms">🇲🇾 Bahasa Melayu</option>
-          <option value="zh">🇨🇳 中文</option>
-          <option value="ta">🇮🇳 தமிழ்</option>
+          <option value="all" className="text-gray-900">🌐 All Languages</option>
+          <option value="en" className="text-gray-900">🇬🇧 English</option>
+          <option value="ms" className="text-gray-900">🇲🇾 Bahasa Melayu</option>
+          <option value="zh" className="text-gray-900">🇨🇳 中文</option>
+          <option value="ta" className="text-gray-900">🇮🇳 தமிழ்</option>
         </select>
-        <span className="ml-2 text-xs text-gray-500">Voice Form Assistant</span>
       </nav>
       <main>{children}</main>
     </div>
