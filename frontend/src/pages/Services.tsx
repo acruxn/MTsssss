@@ -14,8 +14,8 @@ const CATEGORIES: { title: string; items: ServiceItem[] }[] = [
   { title: "Payments", items: [
     { icon: "📷", label: "Scan & Pay", desc: "Scan QR to pay merchants", action: "scan_pay" },
     { icon: "🧾", label: "Pay Bills", desc: "Utilities, telco, broadband", action: "bill_payment" },
-    { icon: "🛣️", label: "Toll", desc: "Highway toll payments", action: "toll_payment", soon: true },
-    { icon: "🅿️", label: "Parking", desc: "Street & mall parking", action: "parking", soon: true },
+    { icon: "🛣️", label: "Toll", desc: "Highway toll payments", action: "pay_toll" },
+    { icon: "🅿️", label: "Parking", desc: "Street & mall parking", action: "pay_parking" },
   ]},
   { title: "Money", items: [
     { icon: "💸", label: "Transfer", desc: "Send money to anyone", action: "fund_transfer" },
@@ -24,21 +24,21 @@ const CATEGORIES: { title: string; items: ServiceItem[] }[] = [
   ]},
   { title: "Top-up", items: [
     { icon: "📱", label: "Reload Phone", desc: "Prepaid credit top-up", action: "pin_reload" },
-    { icon: "🏷️", label: "RFID Top-up", desc: "Reload your TNG RFID tag", action: "rfid_topup", soon: true },
+    { icon: "🏷️", label: "RFID Top-up", desc: "Reload your TNG RFID tag", action: "pay_toll" },
   ]},
   { title: "Financial Services", items: [
-    { icon: "📈", label: "GO+ Savings", desc: "Earn daily returns", action: "check_balance" },
-    { icon: "💳", label: "GOpinjam Loan", desc: "Quick personal financing", action: "gopinjam", soon: true },
-    { icon: "🛡️", label: "Insurance", desc: "Travel & device protection", action: "insurance", soon: true },
+    { icon: "📈", label: "GO+ Savings", desc: "Earn daily returns", action: "invest" },
+    { icon: "💳", label: "GOpinjam Loan", desc: "Quick personal financing", action: "apply_loan" },
+    { icon: "🛡️", label: "Insurance", desc: "Travel & device protection", action: "buy_insurance" },
   ]},
   { title: "Lifestyle", items: [
-    { icon: "🎬", label: "Movie Tickets", desc: "Book cinema seats", action: "movies", soon: true },
-    { icon: "🍔", label: "Food Delivery", desc: "Order meals nearby", action: "food", soon: true },
-    { icon: "❤️", label: "Donations", desc: "Give to verified NGOs", action: "donations", soon: true },
+    { icon: "🎬", label: "Movie Tickets", desc: "Book cinema seats", action: "buy_ticket" },
+    { icon: "🍔", label: "Food Delivery", desc: "Order meals nearby", action: "food_delivery" },
+    { icon: "❤️", label: "Donations", desc: "Give to verified NGOs", action: "donate" },
   ]},
   { title: "Transport", items: [
     { icon: "⛽", label: "Fuel Payment", desc: "Pay at the pump", action: "fuel_payment" },
-    { icon: "🚆", label: "Bus & Train", desc: "Book tickets instantly", action: "transport", soon: true },
+    { icon: "🚆", label: "Bus & Train", desc: "Book tickets instantly", action: "buy_ticket", soon: true },
   ]},
 ];
 

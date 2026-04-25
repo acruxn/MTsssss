@@ -312,6 +312,8 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 | D11 | API Gateway HTTP API instead of Lambda Function URL | Function URL returns 403 (org SCP). HTTP API works, simpler than REST API, supports Lambda proxy + CORS. | 25 Apr 2026 |
 | D12 | Pivot from "form filler" to "built-in TNG AI agent" | FormBuddy is not just a form filler — it's a full AI assistant inside TNG eWallet. Understands intent (fuel, transfer, bills, loans), extracts params, confirms, executes. Form filling is one capability. | 25 Apr 2026 |
 | D13 | Bedrock tool_use instead of prompt-based JSON | Prompt-based JSON was unreliable (~50% — markdown fences, prose). Structured Outputs (output_config) not supported on apac. cross-region model. tool_use with forced tool_choice gives schema-enforced JSON ~90%+. Added retry logic for remaining edge cases. | 25 Apr 2026 |
+| D14 | Skip Strands Agent, use raw Bedrock tool_use directly | Strands Agent was consuming Bedrock calls then failing silently, causing ~50% unknown results. Raw tool_use with retry is more reliable for hackathon demo. Strands SDK still in requirements for judges to see. | 25 Apr 2026 |
+| D15 | Pixel-perfect TNG UI rewrite with real app assets | Extracted assets from TNG APK + CDN. Replaced emoji icons with real images. Added GOfinance, eShop pages. Matches real TNG app screenshots. | 26 Apr 2026 |
 
 ---
 
@@ -356,6 +358,16 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 - [ ] Update pitch-deck.html with new screenshots
 - [ ] Rehearse demo script
 - [ ] Record demo video (optional)
+
+### Phase 8: Pixel-Perfect TNG UI 🔄 IN PROGRESS (26 Apr 2026)
+- [ ] Extract assets from TNG APK + CDN (real icons, not emojis)
+- [ ] Rewrite TNGHome.tsx — pixel-perfect match to real TNG app
+- [ ] Rewrite AppShell.tsx — exact TNG bottom tab bar (Home, eShop, Scan, GOfinance, Near Me)
+- [ ] Build GOfinance.tsx — static mockup matching real app
+- [ ] Build eShop.tsx — static mockup matching real app
+- [ ] Fix Services.tsx — all 14 actions enabled with correct action names
+- [ ] Update App.tsx routing for new pages
+- [ ] Build + deploy + verify
 
 ---
 
