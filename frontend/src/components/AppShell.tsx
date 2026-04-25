@@ -235,7 +235,7 @@ export default function AppShell({
   const floatingMic = (
     <button
       onClick={() => setChatOpen(prev => !prev)}
-      className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg mic-pulse active:scale-90 transition-transform"
+      className="absolute bottom-20 right-4 z-40 w-14 h-14 rounded-full flex items-center justify-center shadow-lg mic-pulse active:scale-90 transition-transform"
       style={{ background: "#0066FF" }}
       aria-label="Open FormBuddy"
     >
@@ -251,15 +251,16 @@ export default function AppShell({
           {statusBar}
           <main className="flex-1 overflow-y-auto bg-[#F5F5F5]">{children}</main>
           {tabBar}
+          {floatingMic}
           {chatPanel}
         </div>
       </div>
 
       {/* Mobile: full screen */}
-      <div className="min-[481px]:hidden flex flex-col min-h-screen bg-[#F5F5F5]">
+      <div className="min-[481px]:hidden flex flex-col min-h-screen bg-[#F5F5F5] relative">
         {statusBar}
         <main className="flex-1 overflow-y-auto pb-20">{children}</main>
-        <div className="fixed bottom-0 inset-x-0 z-50">{tabBar}</div>
+        <div className="fixed bottom-0 inset-x-0 z-30">{tabBar}</div>
         {floatingMic}
         {chatPanel}
       </div>

@@ -178,7 +178,7 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
 
   // Pill state
   if (panelState === "pill") return (
-    <div className="fixed bottom-20 left-4 right-4 z-50 bg-[#0066FF] text-white rounded-full px-5 py-3 flex items-center gap-3 shadow-lg animate-fadeIn">
+    <div className="absolute bottom-20 left-4 right-4 z-50 bg-[#0066FF] text-white rounded-full px-5 py-3 flex items-center gap-3 shadow-lg animate-fadeIn">
       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
       <span className="text-sm font-medium">{pillText}</span>
     </div>
@@ -188,10 +188,10 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-50 bg-black/30" onClick={handleClose} />
+      <div className="absolute inset-0 z-50 bg-black/30" onClick={handleClose} />
 
       {/* Panel */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-2xl flex flex-col transition-transform duration-300" style={{ height: "60vh" }}>
+      <div className="absolute bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-2xl flex flex-col transition-transform duration-300" style={{ height: "60%" }}>
         {/* Drag handle */}
         <div className="flex justify-center pt-2 pb-1">
           <div className="w-10 h-1 rounded-full bg-gray-300" />
