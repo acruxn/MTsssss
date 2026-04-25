@@ -1,8 +1,8 @@
-import { useState } from "react";
-import Layout from "./components/Layout";
-import Dashboard from "./pages/Dashboard";
-import FormTemplates from "./pages/FormTemplates";
-import VoiceAssistant from "./pages/VoiceAssistant";
+import { useEffect, useState } from "react";
+import AppShell from "./components/AppShell";
+import TNGHome from "./pages/TNGHome";
+import Services from "./pages/Services";
+import Agent from "./pages/Agent";
 
 export default function App() {
   const [path, setPath] = useState(window.location.pathname + window.location.search);
@@ -13,13 +13,19 @@ export default function App() {
     setPath(p);
   };
 
+  useEffect(() => {
+    const onPop = () => setPath(window.location.pathname + window.location.search);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
   const basePath = path.split("?")[0];
 
   return (
-    <Layout currentPath={basePath} onNavigate={navigate} language={language} onLanguageChange={(l: string) => { setLanguage(l); localStorage.setItem("formbuddy-lang", l); }}>
-      {basePath === "/" && <Dashboard />}
-      {basePath === "/templates" && <FormTemplates onNavigate={navigate} language={language} />}
-      {basePath === "/voice" && <VoiceAssistant onNavigate={navigate} language={language} />}
-    </Layout>
+    <AppShell currentPath={basePath} onNavigate={navigate} language={language} onLanguageChange={(l) => { setLanguage(l); localStorage.setItem("formbuddy-lang", l); }}>
+      {basePath === "/" && <TNGHome onNavigate={navigate} />}
+      {basePath === "/services" && <Services onNavigate={navigate} language={language} />}
+      {basePath === "/agent" && <Agent onNavigate={navigate} language={language} />}
+    </AppShell>
   );
 }
