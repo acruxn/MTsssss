@@ -3,14 +3,16 @@ import {
   getTemplate, createSession, extractFields, completeSession, detectIntent,
   type FormTemplate, type VoiceSession, type ExtractedFields,
 } from "../lib/api";
-import { speak, stopSpeaking } from "../lib/speech";
+import { stopSpeaking } from "../lib/speech";
+import { getFlow, type ActionFlow } from "../lib/flows";
+import ActionFlowComponent from "../components/ActionFlow";
 
 interface SpeechRecognitionEvent {
   results: { [index: number]: { [index: number]: { transcript: string } }; length: number };
   resultIndex: number;
 }
 
-type Phase = "idle" | "listening" | "processing" | "confirm" | "authenticating" | "success";
+type Phase = "idle" | "listening" | "processing" | "flow" | "success";
 
 const LANG_MAP: Record<string, string> = { en: "en-US", ms: "ms-MY", zh: "zh-CN", ta: "ta-IN" };
 
@@ -30,12 +32,11 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
   const [phase, setPhase] = useState<Phase>("idle");
   const [transcript, setTranscript] = useState("");
   const [extracted, setExtracted] = useState<Record<string, string | null>>({});
-  const [confidence, setConfidence] = useState(0);
   const [error, setError] = useState("");
   const [actionType, setActionType] = useState("");
-  const [actionLabel, setActionLabel] = useState("");
   const [confirmMsg, setConfirmMsg] = useState("");
   const [showTypeInput, setShowTypeInput] = useState(false);
+  const [flow, setFlow] = useState<ActionFlow | null>(null);
   const recognitionRef = useRef<ReturnType<typeof Object> | null>(null);
   const listeningRef = useRef(false);
 
@@ -93,7 +94,9 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
           for (const [k, v] of Object.entries(result.fields)) { if (v !== null && v !== "") m[k] = v; else if (!(k in m)) m[k] = v; }
           return m;
         });
-        setConfidence(result.confidence); setActionType("form_fill"); setActionLabel(template.name); setPhase("confirm");
+        setActionType("form_fill");
+        const f = getFlow("form_fill", Object.fromEntries(Object.entries(extracted).concat(Object.entries(result.fields).map(([k, v]) => [k, v ?? ""]))));
+        if (f) { setFlow(f); setPhase("flow"); } else { setPhase("flow"); setFlow(null); }
       } else {
         const ctx = actionParam ? `${ACTION_META[actionParam]?.label || actionParam}: ${text}` : text;
         const result = await detectIntent(ctx, language);
@@ -104,12 +107,13 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
           for (const [k, v] of Object.entries(result.fields)) fields[k] = v != null ? String(v) : null;
           setExtracted(fields);
         }
-        setConfidence(result.confidence);
         setActionType(result.action_type || (result.template_id ? "form_fill" : actionParam || "unknown"));
-        setActionLabel(result.action_label || result.template_name || ACTION_META[actionParam]?.label || "");
         setConfirmMsg(result.confirmation_message || "");
+        const aType = result.action_type || (result.template_id ? "form_fill" : actionParam || "unknown");
+        const f = getFlow(aType, result.fields);
         if (result.template_id || result.action_type || result.confirmation_message) {
-          setPhase("confirm");
+          setFlow(f);
+          setPhase("flow");
         } else {
           setError("Couldn't understand your request. Try being more specific.");
           setPhase("listening"); startRecognition();
@@ -121,32 +125,10 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
     }
   }
 
-  useEffect(() => {
-    if (phase !== "confirm") return;
-    if (confirmMsg) speak(confirmMsg, language || "en");
-    else if (template) {
-      const rb = template.fields.filter(f => extracted[f.name]).map(f => `${f.label}: ${extracted[f.name]}`).join(". ");
-      if (rb) speak(rb, language || "en");
-    }
-    return () => stopSpeaking();
-  }, [phase]);
-
-  async function handleConfirm() {
-    if (session) await completeSession(session.id).catch(() => {});
-    setPhase("authenticating");
-  }
-
-  useEffect(() => {
-    if (phase !== "authenticating") return;
-    const t = setTimeout(() => setPhase("success"), 1500);
-    return () => clearTimeout(t);
-  }, [phase]);
-
-  function handleSpeakAgain() { setTranscript(""); setError(""); setPhase("listening"); startRecognition(); }
-
   function handleReset() {
     stopSpeaking(); setPhase("idle"); setSession(null); setTranscript(""); setExtracted({});
-    setConfidence(0); setError(""); setConfirmMsg(""); setActionType(""); setActionLabel(""); setShowTypeInput(false);
+    setError(""); setConfirmMsg(""); setActionType(""); setShowTypeInput(false);
+    setFlow(null);
     if (!templateParam) setTemplate(null);
   }
 
@@ -234,57 +216,22 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
         </div>
       )}
 
-      {phase === "confirm" && (
-        <div className="animate-fadeIn space-y-5">
-          {(meta || actionLabel) && (
-            <div className="bg-[#EBF5FF] border border-blue-200 rounded-xl p-4 flex items-center gap-3">
-              <span className="w-10 h-10 rounded-xl bg-[#0066FF] flex items-center justify-center text-xl shrink-0">{meta?.emoji || "📋"}</span>
-              <div>
-                <p className="text-sm font-semibold text-[#0066FF]">{meta?.label || actionLabel}</p>
-                {confirmMsg ? <p className="text-base text-[#1E293B] mt-0.5 font-medium">{confirmMsg}</p> : template && <p className="text-xs text-[#64748B]">We matched your request to this form</p>}
-              </div>
-            </div>
-          )}
-          {template && (
-            <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
-                <h2 className="text-base font-semibold text-[#1E293B]">Extracted Information</h2>
-                {confidence > 0 && <div className="flex items-center gap-2"><div className="w-16 h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden"><div className="h-full rounded-full transition-all duration-700" style={{width:`${Math.round(confidence*100)}%`,backgroundColor:confidence>0.7?"#10B981":confidence>0.4?"#F59E0B":"#EF4444"}}/></div><span className="text-xs text-[#94A3B8] font-medium tabular-nums">{Math.round(confidence*100)}%</span></div>}
-              </div>
-              <div className="divide-y divide-[#F1F5F9]">
-                {template.fields.map(f => { const val = extracted[f.name]; const filled = val && val !== ""; const missing = f.required && !filled; return (
-                  <div key={f.name} className="px-6 py-3.5 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${filled ? "bg-emerald-100 text-emerald-600" : missing ? "bg-amber-100 text-amber-500" : "bg-[#F1F5F9] text-[#94A3B8]"}`}>{filled ? <Chk c="w-3.5 h-3.5"/> : <span className="w-1.5 h-1.5 rounded-full bg-current"/>}</span>
-                      <span className="text-sm text-[#64748B]">{f.label}{f.required && <span className="text-red-400 ml-0.5">*</span>}</span>
-                    </div>
-                    <span className={`text-sm font-medium text-right truncate ${filled ? "text-[#1E293B]" : "text-[#94A3B8]"}`}>{val || "—"}</span>
-                  </div>
-                ); })}
-              </div>
-            </div>
-          )}
-          {!template && confirmMsg && <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm text-center"><p className="text-xl font-semibold text-[#1E293B]">{confirmMsg}</p>{confidence > 0 && <div className="flex items-center justify-center gap-2 mt-3"><div className="w-20 h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden"><div className="h-full rounded-full" style={{width:`${Math.round(confidence*100)}%`,backgroundColor:confidence>0.7?"#10B981":"#F59E0B"}}/></div><span className="text-xs text-[#94A3B8]">{Math.round(confidence*100)}%</span></div>}</div>}
-          <div className="flex flex-col sm:flex-row gap-3 pt-1">
-            <button onClick={handleConfirm} className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl py-3.5 font-medium transition-colors flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/20"><Chk/> Confirm</button>
-            <button onClick={() => { const rb = template?.fields.filter(f => extracted[f.name]).map(f => `${f.label}: ${extracted[f.name]}`).join(". "); if (rb) speak(rb, language || "en"); else if (confirmMsg) speak(confirmMsg, language || "en"); }} className="bg-white border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC] rounded-xl py-3.5 px-5 font-medium transition-colors flex items-center justify-center gap-2">🔊 Read Back</button>
-            <button onClick={handleReset} className="bg-white border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC] rounded-xl py-3.5 px-5 font-medium transition-colors">✗ Cancel</button>
-          </div>
-          {template && <button onClick={handleSpeakAgain} className="w-full bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-xl py-3.5 font-medium transition-colors flex items-center justify-center gap-2">🎙️ Add More Info</button>}
-        </div>
+      {phase === "flow" && flow && (
+        <ActionFlowComponent
+          flow={flow}
+          fields={extracted as Record<string, unknown>}
+          onComplete={async () => {
+            if (session) await completeSession(session.id).catch(() => {});
+            setPhase("success");
+          }}
+          onCancel={handleReset}
+        />
       )}
 
-      {phase === "authenticating" && (
-        <div className="animate-fadeIn fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center">
-          <svg className="w-24 h-24 text-white mb-6 animate-pulse" viewBox="0 0 96 96" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="24" y="16" width="48" height="64" rx="16" />
-            <circle cx="48" cy="42" r="10" />
-            <path d="M38 56c0-5.5 4.5-10 10-10s10 4.5 10 10" strokeLinecap="round" />
-            <line x1="48" y1="8" x2="48" y2="16" strokeLinecap="round" />
-            <line x1="48" y1="80" x2="48" y2="88" strokeLinecap="round" />
-          </svg>
-          <p className="text-white text-lg font-semibold">Confirm with Face ID</p>
-          <p className="text-white/60 text-sm mt-2">Verifying identity...</p>
+      {phase === "flow" && !flow && (
+        <div className="animate-fadeIn flex flex-col items-center text-center py-16">
+          <p className="text-[#64748B] text-sm mb-4">No flow available for this action.</p>
+          <button onClick={handleReset} className="bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-xl py-3 px-6 font-medium transition-colors">Try Again</button>
         </div>
       )}
 

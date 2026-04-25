@@ -139,6 +139,16 @@ button:focus-visible, select:focus-visible, input:focus-visible {
   box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
+/* ── ActionFlow step transitions ── */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideOutLeft {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-40px); }
+}
+
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
