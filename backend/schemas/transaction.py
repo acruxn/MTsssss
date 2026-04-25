@@ -73,3 +73,40 @@ class VoiceSessionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# --- User / Payment ---
+
+class TransferRequest(BaseModel):
+    recipient: str
+    amount: float
+    reference: str = ""
+
+
+class PaymentRequest(BaseModel):
+    type: str
+    amount: float
+    details: Dict[str, Any] = {}
+
+
+class BalanceResponse(BaseModel):
+    balance: float
+    name: str
+
+
+class TransactionResponse(BaseModel):
+    id: int
+    type: str
+    amount: float
+    recipient: Optional[str] = None
+    reference: Optional[str] = None
+    status: str
+    created_at: datetime
+
+
+class TransferResponse(BaseModel):
+    success: bool
+    balance: float
+    transaction_id: Optional[int] = None
+    warnings: List[str] = []
+    message: str

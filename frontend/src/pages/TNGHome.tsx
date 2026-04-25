@@ -57,8 +57,8 @@ function BlueHeader({ showBal, setShowBal, onNavigate }: { showBal: boolean; set
       </button>
       {/* Buttons */}
       <div className="flex gap-3">
-        <button onClick={() => onNavigate("/agent?action=pin_reload")} className="flex-1 py-2.5 rounded-full text-sm font-bold bg-white active:scale-[0.97] transition-transform" style={{ color: "#0066FF" }}>+ Add money</button>
-        <button onClick={() => onNavigate("/agent?action=check_balance")} className="flex-1 py-2.5 rounded-full text-sm font-semibold text-white border border-white/40 active:scale-[0.97] transition-transform">Transactions &gt;</button>
+        <button onClick={() => onNavigate("/reload")} className="flex-1 py-2.5 rounded-full text-sm font-bold bg-white active:scale-[0.97] transition-transform" style={{ color: "#0066FF" }}>+ Add money</button>
+        <button onClick={() => onNavigate("/balance")} className="flex-1 py-2.5 rounded-full text-sm font-semibold text-white border border-white/40 active:scale-[0.97] transition-transform">Transactions &gt;</button>
       </div>
     </div>
   );
@@ -74,7 +74,7 @@ function QuickActions({ onNavigate }: { onNavigate: (p: string) => void }) {
     <div className="bg-white mx-4 -mt-1 rounded-2xl px-2 py-4 shadow-sm relative z-10">
       <div className="grid grid-cols-4">
         {items.map((a) => (
-          <button key={a.label} onClick={() => a.action ? onNavigate(`/agent?action=${a.action}`) : a.label === "Cash flow" ? onNavigate("/gofinance") : undefined} className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
+          <button key={a.label} onClick={() => a.action === "fund_transfer" ? onNavigate("/transfer") : a.action ? onNavigate(`/agent?action=${a.action}`) : a.label === "Cash flow" ? onNavigate("/gofinance") : undefined} className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "#F0F4FF" }}>{a.icon}</div>
             <span className="text-[11px] font-medium text-gray-700">{a.label}</span>
           </button>
@@ -87,7 +87,7 @@ function FeatureCards({ onNavigate }: { onNavigate: (p: string) => void }) {
   return (
     <div className="grid grid-cols-2 gap-2.5 px-4 mt-3">
       {/* Grow your money */}
-      <button onClick={() => onNavigate("/agent?action=invest")} className="bg-white rounded-2xl p-3 flex items-center gap-2.5 active:scale-[0.97] transition-transform text-left shadow-sm">
+      <button onClick={() => onNavigate("/gofinance")} className="bg-white rounded-2xl p-3 flex items-center gap-2.5 active:scale-[0.97] transition-transform text-left shadow-sm">
         <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #FFD700, #FFA500)" }}>
           <span className="text-white text-sm font-bold">RM</span>
         </div>
@@ -97,7 +97,7 @@ function FeatureCards({ onNavigate }: { onNavigate: (p: string) => void }) {
         </div>
       </button>
       {/* BUDI95 */}
-      <button onClick={() => onNavigate("/agent?action=fuel_payment")} className="bg-white rounded-2xl p-3 flex items-center gap-2.5 active:scale-[0.97] transition-transform text-left shadow-sm">
+      <button onClick={() => onNavigate("/fuel")} className="bg-white rounded-2xl p-3 flex items-center gap-2.5 active:scale-[0.97] transition-transform text-left shadow-sm">
         <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden" style={{ background: "#2D5016" }}>
           <span className="text-[8px] font-black text-white leading-none text-center">BUDI<br/>MADANI</span>
         </div>
@@ -117,7 +117,7 @@ function FeatureCards({ onNavigate }: { onNavigate: (p: string) => void }) {
         </div>
       </button>
       {/* Fuel balance */}
-      <button onClick={() => onNavigate("/agent?action=fuel_payment")} className="bg-white rounded-2xl p-3 flex items-center gap-2.5 active:scale-[0.97] transition-transform text-left shadow-sm">
+      <button onClick={() => onNavigate("/fuel")} className="bg-white rounded-2xl p-3 flex items-center gap-2.5 active:scale-[0.97] transition-transform text-left shadow-sm">
         <div className="flex-1">
           <p className="text-[13px] font-bold text-gray-900 leading-tight">Fuel balance</p>
           <p className="text-[11px] text-gray-400 mt-0.5">88 litres</p>
@@ -228,7 +228,7 @@ function RecentTransactions({ onNavigate }: { onNavigate: (p: string) => void })
     <div className="bg-white mx-4 mt-5 rounded-2xl overflow-hidden shadow-sm">
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <p className="text-sm font-bold text-gray-900">Recent Transactions</p>
-        <button onClick={() => onNavigate("/agent?action=check_balance")} className="text-xs font-semibold" style={{ color: "#0066FF" }}>See All</button>
+        <button onClick={() => onNavigate("/balance")} className="text-xs font-semibold" style={{ color: "#0066FF" }}>See All</button>
       </div>
       {txns.map((tx, i) => (
         <div key={i} className={`flex items-center gap-3 px-4 py-3 ${i < txns.length - 1 ? "border-b border-gray-50" : ""}`}>

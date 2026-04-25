@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.database import engine, Base
 
 # Import models so they register with Base.metadata
-from models import transaction, user, alert  # noqa: F401
+from models import transaction, user, alert, payment  # noqa: F401
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -98,8 +98,20 @@ def _auto_seed():
         for u, f, lang, status, data in sessions_data:
             db.add(VoiceSession(user_id=u.id, form_template_id=f.id, language=lang, status=status, filled_data=json.dumps(data)))
 
+        # Seed payment transactions for demo user (users[0])
+        from models.payment import Transaction as PaymentTxn
+        seed_txns = [
+            PaymentTxn(user_id=users[0].id, type="transfer", amount=-100.0, recipient="Ahmad", reference="rent"),
+            PaymentTxn(user_id=users[0].id, type="fuel", amount=-50.0, recipient="Petronas", reference="RON95"),
+            PaymentTxn(user_id=users[0].id, type="bill", amount=-156.80, recipient="TNB", reference="electricity"),
+            PaymentTxn(user_id=users[0].id, type="reload", amount=-30.0, recipient="Maxis", reference="prepaid"),
+            PaymentTxn(user_id=users[0].id, type="transfer", amount=200.0, recipient="Siti", reference="received"),
+        ]
+        for txn in seed_txns:
+            db.add(txn)
+
         db.commit()
-        logger.info("Auto-seeded: %d users, %d templates, %d sessions", len(users), len(forms), len(sessions_data))
+        logger.info("Auto-seeded: %d users, %d templates, %d sessions, %d transactions", len(users), len(forms), len(sessions_data), len(seed_txns))
     except Exception as e:
         logger.error("Auto-seed failed: %s", e)
         db.rollback()
@@ -124,11 +136,12 @@ app.add_middleware(
 )
 
 # Register routers
-from api.routes import transactions, analysis, dashboard  # noqa: E402
+from api.routes import transactions, analysis, dashboard, user  # noqa: E402
 
 app.include_router(transactions.router)  # /api/v1/forms
 app.include_router(analysis.router)      # /api/v1/voice
 app.include_router(dashboard.router)     # /api/v1/dashboard
+app.include_router(user.router)          # /api/v1/user
 
 
 @app.get("/health")

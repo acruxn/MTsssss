@@ -89,3 +89,17 @@ export const detectIntent = (transcript: string, language: string) =>
     method: "POST",
     body: JSON.stringify({ transcript, language }),
   });
+
+// --- User & Payment types ---
+
+export interface BalanceInfo { balance: number; name: string; }
+export interface PaymentTransaction { id: number; type: string; amount: number; recipient: string | null; reference: string | null; status: string; created_at: string; }
+export interface TransferResult { success: boolean; balance: number; transaction_id: number | null; warnings: string[]; message: string; }
+export interface PayResult { success: boolean; balance: number; transaction_id: number | null; message: string; }
+
+export const getBalance = () => request<BalanceInfo>("/user/balance");
+export const getTransactions = () => request<PaymentTransaction[]>("/user/transactions");
+export const postTransfer = (recipient: string, amount: number, reference: string = "") =>
+  request<TransferResult>("/user/transfer", { method: "POST", body: JSON.stringify({ recipient, amount, reference }) });
+export const postPayment = (type: string, amount: number, details: Record<string, unknown> = {}) =>
+  request<PayResult>("/user/pay", { method: "POST", body: JSON.stringify({ type, amount, details }) });

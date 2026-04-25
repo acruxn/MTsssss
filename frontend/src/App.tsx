@@ -5,6 +5,10 @@ import Services from "./pages/Services";
 import Agent from "./pages/Agent";
 import GOfinance from "./pages/GOfinance";
 import EShop from "./pages/EShop";
+import BalancePage from "./pages/BalancePage";
+import TransferPage from "./pages/TransferPage";
+import FuelPage from "./pages/FuelPage";
+import ReloadPage from "./pages/ReloadPage";
 
 export default function App() {
   const [path, setPath] = useState(window.location.pathname + window.location.search);
@@ -30,6 +34,10 @@ export default function App() {
       {basePath === "/agent" && <Agent onNavigate={navigate} language={language} />}
       {basePath === "/gofinance" && <GOfinance onNavigate={navigate} />}
       {basePath === "/eshop" && <EShop onNavigate={navigate} />}
+      {basePath === "/balance" && <BalancePage onNavigate={navigate} />}
+      {basePath === "/transfer" && <TransferPage onNavigate={navigate} />}
+      {basePath === "/fuel" && <FuelPage onNavigate={navigate} />}
+      {basePath === "/reload" && <ReloadPage onNavigate={navigate} />}
     </AppShell>
   );
 }
