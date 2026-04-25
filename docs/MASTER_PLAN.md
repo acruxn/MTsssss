@@ -152,7 +152,7 @@ Tested 25 Apr 2026, 8:30 PM MYT — all live and deployed.
 |-------|-----------|-------|----------|
 | **Voice I/O** | Web Speech API | Browser (free) | N/A — browser native |
 | **AI** | Bedrock Claude Sonnet 4 | AWS ap-southeast-1 | ✅ Tested |
-| **AI Method** | tool_use (schema-enforced JSON) | AWS Bedrock | ✅ Reliable structured output |
+| **AI Method** | Strands Agents SDK + tool_use (schema-enforced JSON) | AWS Bedrock | ✅ Reliable structured output |
 | **Backend** | FastAPI + Mangum (Lambda) | AWS ap-southeast-1 | ✅ Live, 60s timeout |
 | **Database** | RDS MySQL 8.0 (OceanBase-compatible) | Alibaba ap-southeast-3 | ✅ Live in KL |
 | **Frontend** | React 19 + TypeScript + Tailwind 4 + Vite 8 | AWS Amplify (HTTPS) | ✅ Live |
