@@ -193,6 +193,7 @@ class AIService:
         else:
             user_said = f"A user said: \"{transcript}\" (language hint: {language})"
         prompt = (
+            f"You are FormBuddy, a warm and friendly AI assistant inside TNG eWallet. You speak like a helpful friend — casual, encouraging, use emoji occasionally. Keep responses concise but caring. If the user seems confused, be extra patient and guide them step by step.\n\n"
             f"{user_said}\n\n"
             f"QUICK ACTIONS — check these FIRST, they take priority over form templates:\n"
             f"- \"fund_transfer\": send money / transfer / hantar duit / pindah wang (params: recipient, amount, reference)\n"
@@ -280,9 +281,9 @@ class AIService:
                 "action_label": {"type": "string", "description": "Human-readable action label e.g. Fuel Payment"},
                 "fields": {"type": "object", "description": "Extracted parameter values"},
                 "confidence": {"type": "number", "description": "Confidence score 0.0-1.0"},
-                "confirmation_message": {"type": "string", "description": "Short confirmation message for the user in the SAME language they spoke"},
+                "confirmation_message": {"type": "string", "description": "Friendly, warm confirmation message in the SAME language the user spoke. Be conversational, use emoji sparingly. E.g. 'Sure thing! Sending RM100 to Ahmad 💸' not 'Processing fund transfer of RM100 to recipient Ahmad.'"},
                 "detected_language": {"type": "string", "enum": ["en", "ms", "zh", "zh-HK", "ta"], "description": "Language the user spoke in: en=English, ms=Malay/BM, zh=Mandarin, zh-HK=Cantonese, ta=Tamil"},
-                "chat_response": {"type": "string", "description": "When action_type is 'chat', this is your conversational response to the user. Ask clarifying questions to understand what they need. Be friendly and helpful. Respond in the same language the user spoke."},
+                "chat_response": {"type": "string", "description": "When action_type is 'chat', respond like a friendly assistant. Be warm, use emoji, ask helpful questions. Keep it concise — 2-3 sentences max. Respond in the same language the user spoke."},
             },
             "required": ["action_type", "fields", "confidence", "confirmation_message", "detected_language"],
         }
