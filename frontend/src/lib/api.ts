@@ -111,3 +111,9 @@ export const postTransfer = (recipient: string, amount: number, reference: strin
   request<TransferResult>("/user/transfer", { method: "POST", body: JSON.stringify({ recipient, amount, reference }) });
 export const postPayment = (type: string, amount: number, details: Record<string, unknown> = {}) =>
   request<PayResult>("/user/pay", { method: "POST", body: JSON.stringify({ type, amount, details }) });
+
+export const transcribeAudio = (audio: string, format: string = "webm") =>
+  request<{ transcript: string; language_code: string; aws_language: string }>("/voice/transcribe", {
+    method: "POST",
+    body: JSON.stringify({ audio, format }),
+  });

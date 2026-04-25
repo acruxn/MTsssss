@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { detectIntent, getBalance } from "../lib/api";
+import { detectIntent, getBalance, transcribeAudio } from "../lib/api";
 import { speak, stopSpeaking } from "../lib/speech";
 
 interface ChatPanelProps {
@@ -34,10 +34,13 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
   const [recording, setRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [pillText, setPillText] = useState("");
 
   const recognitionRef = useRef<ReturnType<typeof Object> | null>(null);
   const listeningRef = useRef(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Sync isOpen → panelState
@@ -86,6 +89,15 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
     (r as unknown as { start: () => void }).start();
     recognitionRef.current = r; listeningRef.current = true;
     setRecording(true);
+
+    // Also start MediaRecorder for Transcribe
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      const mr = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      audioChunksRef.current = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      mr.start();
+      mediaRecorderRef.current = mr;
+    }).catch(() => {});
   }
 
   function stopRecording() {
@@ -94,17 +106,54 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
       (recognitionRef.current as unknown as { stop: () => void }).stop();
     recognitionRef.current = null;
     setRecording(false);
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
+    }
+    mediaRecorderRef.current = null;
   }
 
   function toggleMic() {
     if (recording) {
       stopRecording();
-      const text = transcript.trim();
+      const webSpeechText = transcript.trim();
       setTranscript("");
-      if (text) { setInput(""); submitText(text); }
+      if (webSpeechText || audioChunksRef.current.length > 0) {
+        transcribeAndSubmit(webSpeechText);
+      }
     } else {
       setTranscript("");
       startRecording();
+    }
+  }
+
+  async function transcribeAndSubmit(webSpeechText: string) {
+    let finalTranscript = webSpeechText;
+    let detectedLang = language;
+
+    if (audioChunksRef.current.length > 0) {
+      setTranscribing(true);
+      try {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+          reader.readAsDataURL(blob);
+        });
+        const result = await transcribeAudio(base64, "webm");
+        if (result.transcript) {
+          finalTranscript = result.transcript;
+          detectedLang = result.language_code;
+        }
+      } catch { /* Transcribe failed — use Web Speech transcript */ }
+      audioChunksRef.current = [];
+      setTranscribing(false);
+    }
+
+    if (finalTranscript) {
+      setInput("");
+      submitText(finalTranscript, detectedLang);
     }
   }
 
@@ -115,14 +164,15 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
     submitText(text);
   }
 
-  async function submitText(text: string) {
+  async function submitText(text: string, detectedLang?: string) {
     stopSpeaking();
     setProcessing(true);
     setMessages(prev => [...prev, { role: "user", content: text }]);
+    const lang = detectedLang || language;
 
     try {
       const historyCtx = messages.map(m => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`).join("\n") + "\nUser: " + text;
-      const result = await detectIntent(historyCtx, language);
+      const result = await detectIntent(historyCtx, lang);
       const aType = result.action_type || "unknown";
 
       // Chat response — stay in conversation
@@ -247,6 +297,14 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+            </div>
+          )}
+          {transcribing && (
+            <div className="flex justify-start">
+              <div className="bg-blue-50 rounded-2xl rounded-bl-md px-4 py-2.5 text-xs text-[#0066FF] font-medium flex items-center gap-2">
+                <div className="w-3 h-3 border-2 border-[#0066FF] border-t-transparent rounded-full animate-spin" />
+                Transcribing...
               </div>
             </div>
           )}

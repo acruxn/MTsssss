@@ -1,5 +1,8 @@
+import base64
 import json
 import logging
+import time
+import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException
@@ -124,3 +127,78 @@ def _session_response(session: VoiceSession) -> dict:
         "language": session.language,
         "created_at": session.created_at,
     }
+
+
+@router.post("/transcribe")
+async def transcribe_audio(
+    audio: str = Body(..., embed=True),
+    format: str = Body("webm", embed=True),
+):
+    """Transcribe audio using AWS Transcribe with auto language detection."""
+    import boto3
+    from core.config import settings
+
+    kwargs = {"region_name": settings.AWS_REGION}
+    if settings.AWS_ACCESS_KEY_ID:
+        kwargs["aws_access_key_id"] = settings.AWS_ACCESS_KEY_ID
+        kwargs["aws_secret_access_key"] = settings.AWS_SECRET_ACCESS_KEY
+        if settings.AWS_SESSION_TOKEN:
+            kwargs["aws_session_token"] = settings.AWS_SESSION_TOKEN
+
+    s3 = boto3.client("s3", **kwargs)
+    transcribe = boto3.client("transcribe", **kwargs)
+
+    audio_bytes = base64.b64decode(audio)
+    job_name = f"formbuddy-{uuid.uuid4().hex[:8]}"
+    ext = "webm" if format == "webm" else "wav"
+    s3_key = f"audio/{job_name}.{ext}"
+    bucket = "finhack-frontend-dev"
+
+    s3.put_object(Bucket=bucket, Key=s3_key, Body=audio_bytes, ContentType=f"audio/{ext}")
+
+    media_format = "webm" if format == "webm" else "wav"
+
+    try:
+        transcribe.start_transcription_job(
+            TranscriptionJobName=job_name,
+            Media={"MediaFileUri": f"s3://{bucket}/{s3_key}"},
+            MediaFormat=media_format,
+            IdentifyLanguage=True,
+            LanguageOptions=["en-US", "ms-MY", "zh-CN", "zh-TW", "ta-IN"],
+        )
+    except Exception as e:
+        logger.error(f"Transcribe start error: {e}")
+        s3.delete_object(Bucket=bucket, Key=s3_key)
+        raise HTTPException(status_code=500, detail="Transcription failed to start")
+
+    for _ in range(60):
+        time.sleep(0.5)
+        resp = transcribe.get_transcription_job(TranscriptionJobName=job_name)
+        status = resp["TranscriptionJob"]["TranscriptionJobStatus"]
+        if status == "COMPLETED":
+            import urllib.request
+            result_url = resp["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
+            with urllib.request.urlopen(result_url) as r:
+                result = json.loads(r.read())
+            transcript_text = result["results"]["transcripts"][0]["transcript"]
+            detected_lang = resp["TranscriptionJob"].get("LanguageCode", "en-US")
+
+            transcribe.delete_transcription_job(TranscriptionJobName=job_name)
+            s3.delete_object(Bucket=bucket, Key=s3_key)
+
+            lang_map = {"en-US": "en", "ms-MY": "ms", "zh-CN": "zh", "zh-TW": "zh", "ta-IN": "ta"}
+            return {"transcript": transcript_text, "language_code": lang_map.get(detected_lang, "en"), "aws_language": detected_lang}
+
+        elif status == "FAILED":
+            reason = resp["TranscriptionJob"].get("FailureReason", "Unknown")
+            logger.error(f"Transcribe failed: {reason}")
+            transcribe.delete_transcription_job(TranscriptionJobName=job_name)
+            s3.delete_object(Bucket=bucket, Key=s3_key)
+            raise HTTPException(status_code=500, detail=f"Transcription failed: {reason}")
+
+    try:
+        transcribe.delete_transcription_job(TranscriptionJobName=job_name)
+        s3.delete_object(Bucket=bucket, Key=s3_key)
+    except Exception:
+        pass
+    raise HTTPException(status_code=504, detail="Transcription timed out")
