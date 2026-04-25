@@ -10,6 +10,8 @@ import {
 } from "../lib/api";
 import { speak, stopSpeaking } from "../lib/speech";
 
+const fadeInStyle = `@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`;
+
 interface SpeechRecognitionEvent {
   results: { [index: number]: { [index: number]: { transcript: string } }; length: number };
   resultIndex: number;
@@ -205,7 +207,7 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
   );
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="px-4 py-6 sm:p-8 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-2">🎙️ Voice Assistant</h1>
       {template && <p className="text-gray-400 mb-6">Filling: {template.name}</p>}
 
@@ -213,27 +215,32 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
         <div className="bg-red-900/40 border border-red-800 rounded-lg p-3 mb-4 text-sm text-red-300">{error}</div>
       )}
 
+      <style>{fadeInStyle}</style>
+
       {/* IDLE */}
       {phase === "idle" && (
+        <div className="animate-fadeIn" style={{ animation: "fadeIn 0.3s ease-in" }}>
         <div className="space-y-6">
           <FieldList />
           <div className="flex flex-col items-center gap-4 py-8">
             <button
               onClick={handleStartListening}
-              className="w-32 h-32 rounded-full bg-blue-600 hover:bg-blue-500 transition-all flex items-center justify-center shadow-lg shadow-blue-600/30"
+              className="mic-pulse w-32 h-32 rounded-full bg-blue-600 hover:bg-blue-500 transition-all flex items-center justify-center shadow-lg shadow-blue-600/30"
             >
               {MicIcon}
             </button>
             <p className="text-gray-400 text-sm">Tap to start — tell us everything</p>
           </div>
         </div>
+        </div>
       )}
 
       {/* LISTENING */}
       {phase === "listening" && (
+        <div className="animate-fadeIn" style={{ animation: "fadeIn 0.3s ease-in" }}>
         <div className="space-y-6">
           <FieldList />
-          <div className="flex items-center justify-center gap-1 h-16">
+          <div className="flex items-center justify-center gap-1 h-12 sm:h-16">
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
@@ -262,18 +269,22 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
             </button>
           </div>
         </div>
+        </div>
       )}
 
       {/* EXTRACTING */}
       {phase === "extracting" && (
+        <div className="animate-fadeIn" style={{ animation: "fadeIn 0.3s ease-in" }}>
         <div className="flex flex-col items-center gap-4 py-16">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-gray-400">Extracting fields with AI...</p>
+        </div>
         </div>
       )}
 
       {/* CONFIRM */}
       {phase === "confirm" && (
+        <div className="animate-fadeIn" style={{ animation: "fadeIn 0.3s ease-in" }}>
         <div className="space-y-6">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
@@ -305,7 +316,7 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
               })}
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleSubmit}
               className="flex-1 bg-green-600 hover:bg-green-500 text-white rounded-lg py-3 font-medium transition-colors"
@@ -338,10 +349,12 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
             </button>
           </div>
         </div>
+        </div>
       )}
 
       {/* DONE */}
       {phase === "done" && (
+        <div className="animate-fadeIn" style={{ animation: "fadeIn 0.3s ease-in" }}>
         <div className="text-center py-12 space-y-4">
           <p className="text-5xl">✅</p>
           <p className="text-xl font-semibold">Form submitted successfully!</p>
@@ -353,6 +366,7 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
               Dashboard
             </button>
           </div>
+        </div>
         </div>
       )}
     </div>
