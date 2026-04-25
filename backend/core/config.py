@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # OceanBase
-    DATABASE_URL: str = "mysql+pymysql://root:@localhost:2881/finhack_db"
+    DATABASE_URL: str = "mysql+pymysql://formbuddy:FormBuddy2026!@finhack-formbuddy.mysql.kualalumpur.rds.aliyuncs.com:3306/finhack_db"
 
     # Alibaba Cloud - Qwen
     DASHSCOPE_API_KEY: str = ""

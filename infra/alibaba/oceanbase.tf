@@ -1,24 +1,15 @@
-# OceanBase on Alibaba Cloud — ap-southeast-3 (Malaysia/KL)
-
-data "alicloud_zones" "ob_zones" {
-  available_resource_creation = "VSwitch"
-}
-
-resource "alicloud_ocean_base_instance" "formbuddy" {
-  instance_name  = "${var.project_name}-oceanbase-${var.environment}"
-  series         = "normal"
-  instance_class = "4C16G"
-  disk_size      = 100
-  disk_type      = "cloud_essd_pl1"
-  payment_type   = "PayAsYouGo"
-
-  zones = [
-    "ap-southeast-3a",
-  ]
-
-  backup_retain_mode = "delete_all"
-}
-
-output "oceanbase_instance_id" {
-  value = alicloud_ocean_base_instance.formbuddy.id
-}
+# Alibaba Cloud RDS MySQL — ap-southeast-3 (Malaysia/KL)
+#
+# Instance: rm-zf8cjweha7koh7btt ("finhack-formbuddy")
+# Created via Python SDK during hackathon (OceanBase blocked by STS billing permission)
+# Class: mysql.n2e.small.1, MySQL 8.0, Zone: ap-southeast-3a
+# Public endpoint: finhack-formbuddy.mysql.kualalumpur.rds.aliyuncs.com:3306
+# Account: formbuddy, Database: finhack_db
+#
+# To import into Terraform state:
+#   terraform import alicloud_db_instance.formbuddy rm-zf8cjweha7koh7btt
+#
+# OceanBase was the original target but CreateInstance order is blocked
+# by STS billing permission. RDS MySQL is the same pymysql driver,
+# same region. Migrates to OceanBase with zero code change in production.
+# See MASTER_PLAN.md Decision D9.
