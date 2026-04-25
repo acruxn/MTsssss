@@ -45,7 +45,7 @@ const ScanIcon = () => (
 const TABS: readonly { label: string; path: string; disabled?: boolean }[] = [
   { label: "Home", path: "/" },
   { label: "eShop", path: "/eshop" },
-  { label: "Scan", path: "/agent?action=scan_pay" },
+  { label: "Scan", path: "/scan" },
   { label: "GOfinance", path: "/gofinance" },
   { label: "Near Me", path: "", disabled: true },
 ];

@@ -88,7 +88,7 @@ export default function Services({ onNavigate, language }: { onNavigate: (path: 
                 key={item.action}
                 onClick={() => {
                   if (item.soon) return;
-                  const direct: Record<string, string> = { fund_transfer: "/transfer", fuel_payment: "/fuel", pin_reload: "/reload", check_balance: "/balance" };
+                  const direct: Record<string, string> = { fund_transfer: "/transfer", fuel_payment: "/fuel", pin_reload: "/reload", check_balance: "/balance", bill_payment: "/bill" };
                   onNavigate(direct[item.action] || `/agent?action=${item.action}`);
                 }}
                 disabled={item.soon}

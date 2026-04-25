@@ -114,15 +114,16 @@ export default function ActionFlow({ flow, fields, onComplete, onCancel }: Actio
     return () => clearTimeout(timerRef.current);
   }, [stepDone, step]);
 
-  // Auto-advance biometric
-  useEffect(() => {
-    if (current?.type !== "biometric") return;
-    const t = setTimeout(() => {
+  // Biometric: require user tap (human-in-the-loop)
+  const [bioVerifying, setBioVerifying] = useState(false);
+
+  function handleBioTap() {
+    setBioVerifying(true);
+    setTimeout(() => {
       setStepDone(true);
       setTimeout(advance, 400);
-    }, current.autoAdvanceMs ?? 1500);
-    return () => clearTimeout(t);
-  }, [step]);
+    }, 1000);
+  }
 
   const resolveValue = (s: typeof current): string => {
     if (s.value) return s.value;
@@ -144,16 +145,28 @@ export default function ActionFlow({ flow, fields, onComplete, onCancel }: Actio
     const sec = pickSecurity(flow.title);
     return (
       <div className="fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center animate-fadeIn">
-        {!stepDone ? (
+        {stepDone ? (
+          <div className="animate-popIn w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center">
+            <Chk c="w-10 h-10 text-white" />
+          </div>
+        ) : bioVerifying ? (
           <>
             <div className="animate-pulse">{sec.svg}</div>
             <p className="text-white text-lg font-semibold mt-6">{sec.label}</p>
             <p className="text-white/60 text-sm mt-2">{sec.verifying}</p>
           </>
         ) : (
-          <div className="animate-popIn w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center">
-            <Chk c="w-10 h-10 text-white" />
-          </div>
+          <>
+            <div className="mb-2">{sec.svg}</div>
+            <p className="text-white text-lg font-semibold mt-4">{sec.label}</p>
+            <p className="text-white/50 text-sm mt-2 mb-8">Verify to authorize this transaction</p>
+            <button
+              onClick={handleBioTap}
+              className="px-8 py-3 rounded-full border-2 border-white/60 text-white font-semibold text-sm active:scale-95 transition-transform hover:border-white"
+            >
+              Tap to verify
+            </button>
+          </>
         )}
       </div>
     );

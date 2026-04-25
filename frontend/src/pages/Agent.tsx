@@ -4,7 +4,7 @@ import {
   postPayment, postTransfer,
   type FormTemplate, type VoiceSession, type ExtractedFields,
 } from "../lib/api";
-import { stopSpeaking } from "../lib/speech";
+import { speak, stopSpeaking } from "../lib/speech";
 import { getFlow, type ActionFlow } from "../lib/flows";
 import ActionFlowComponent from "../components/ActionFlow";
 
@@ -105,7 +105,9 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
           return m;
         });
         setActionType("form_fill");
-        const f = getFlow("form_fill", Object.fromEntries(Object.entries(extracted).concat(Object.entries(result.fields).map(([k, v]) => [k, v ?? ""]))));
+        const mergedFields = { ...extracted };
+        for (const [k, v] of Object.entries(result.fields)) { if (v !== null && v !== "") mergedFields[k] = v; else if (!(k in mergedFields)) mergedFields[k] = v; }
+        const f = getFlow("form_fill", mergedFields as Record<string, unknown>);
         if (f) { setFlow(f); setPhase("flow"); } else { setPhase("flow"); setFlow(null); }
       } else {
         const ctx = actionParam ? `${ACTION_META[actionParam]?.label || actionParam}: ${text}` : text;
@@ -122,6 +124,7 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
         const aType = result.action_type || (result.template_id ? "form_fill" : actionParam || "unknown");
         const f = getFlow(aType, result.fields);
         if (result.template_id || result.action_type || result.confirmation_message) {
+          if (result.confirmation_message) await speak(result.confirmation_message, language);
           setFlow(f);
           setPhase("flow");
         } else {
@@ -244,6 +247,7 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
               }
             } catch { /* demo — don't block flow */ }
             if (session) await completeSession(session.id).catch(() => {});
+            speak(`Done. ${confirmMsg || "Transaction complete."}`, language);
             setPhase("success");
           }}
           onCancel={handleReset}

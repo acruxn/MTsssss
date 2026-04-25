@@ -9,6 +9,8 @@ import BalancePage from "./pages/BalancePage";
 import TransferPage from "./pages/TransferPage";
 import FuelPage from "./pages/FuelPage";
 import ReloadPage from "./pages/ReloadPage";
+import ScanPage from "./pages/ScanPage";
+import BillPage from "./pages/BillPage";
 
 export default function App() {
   const [path, setPath] = useState(window.location.pathname + window.location.search);
@@ -38,6 +40,8 @@ export default function App() {
       {basePath === "/transfer" && <TransferPage onNavigate={navigate} />}
       {basePath === "/fuel" && <FuelPage onNavigate={navigate} />}
       {basePath === "/reload" && <ReloadPage onNavigate={navigate} />}
+      {basePath === "/scan" && <ScanPage onNavigate={navigate} />}
+      {basePath === "/bill" && <BillPage onNavigate={navigate} />}
     </AppShell>
   );
 }

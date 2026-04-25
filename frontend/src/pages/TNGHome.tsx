@@ -9,16 +9,28 @@ export default function TNGHome({ onNavigate }: { onNavigate: (path: string) => 
   const [showBal, setShowBal] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
   const [txns, setTxns] = useState<PaymentTransaction[]>([]);
+  const [toast, setToast] = useState("");
 
   useEffect(() => {
-    getBalance().then((b) => setBalance(b.balance)).catch(() => setBalance(1234.56));
-    getTransactions().then(setTxns).catch(() => {});
+    const fetchData = () => {
+      getBalance().then((b) => setBalance(b.balance)).catch(() => setBalance(1234.56));
+      getTransactions().then(setTxns).catch(() => {});
+    };
+    fetchData();
+    const onFocus = () => fetchData();
+    const onVisible = () => { if (!document.hidden) fetchData(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVisible); };
   }, []);
+
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 2000); };
 
   return (
     <div style={{ background: "#F5F5F5" }}>
+      {toast && <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm px-4 py-2 rounded-full shadow-lg animate-fadeIn">{toast}</div>}
       <BlueHeader showBal={showBal} setShowBal={setShowBal} onNavigate={onNavigate} balance={balance} />
-      <QuickActions onNavigate={onNavigate} />
+      <QuickActions onNavigate={onNavigate} showToast={showToast} />
       <FeatureCards onNavigate={onNavigate} />
       <PromoCarousel />
       <Recommended onNavigate={onNavigate} />
@@ -71,18 +83,23 @@ function BlueHeader({ showBal, setShowBal, onNavigate, balance }: { showBal: boo
     </div>
   );
 }
-function QuickActions({ onNavigate }: { onNavigate: (p: string) => void }) {
+function QuickActions({ onNavigate, showToast }: { onNavigate: (p: string) => void; showToast: (msg: string) => void }) {
   const items = [
-    { label: "Apply", action: "", icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.5"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg> },
-    { label: "Cash flow", action: "", icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg> },
-    { label: "Transfer", action: "fund_transfer", icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.5"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg> },
-    { label: "Cards", action: "", icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> },
+    { label: "Apply", action: "toast", icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.5"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg> },
+    { label: "Cash flow", action: "gofinance", icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg> },
+    { label: "Transfer", action: "transfer", icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.5"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg> },
+    { label: "Cards", action: "toast", icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> },
   ];
+  function handleClick(a: typeof items[number]) {
+    if (a.action === "toast") showToast("Coming soon");
+    else if (a.action === "gofinance") onNavigate("/gofinance");
+    else if (a.action === "transfer") onNavigate("/transfer");
+  }
   return (
     <div className="bg-white mx-4 -mt-1 rounded-2xl px-2 py-4 shadow-sm relative z-10">
       <div className="grid grid-cols-4">
         {items.map((a) => (
-          <button key={a.label} onClick={() => a.action === "fund_transfer" ? onNavigate("/transfer") : a.action ? onNavigate(`/agent?action=${a.action}`) : a.label === "Cash flow" ? onNavigate("/gofinance") : undefined} className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
+          <button key={a.label} onClick={() => handleClick(a)} className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "#F0F4FF" }}>{a.icon}</div>
             <span className="text-[11px] font-medium text-gray-700">{a.label}</span>
           </button>
@@ -184,7 +201,7 @@ function Recommended({ onNavigate }: { onNavigate: (p: string) => void }) {
       <p className="text-base font-bold text-gray-900 mb-3">Recommended</p>
       <div className="flex justify-between">
         {items.map((r) => (
-          <button key={r.label} onClick={() => onNavigate("/services")} className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform relative">
+          <button key={r.label} onClick={() => onNavigate(r.label === "Bills" ? "/bill" : "/services")} className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform relative">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: r.bg }}>
               <svg width="32" height="32" viewBox="0 0 32 32">{r.icon}</svg>
             </div>
