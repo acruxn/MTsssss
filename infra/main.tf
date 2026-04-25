@@ -14,13 +14,11 @@ terraform {
 }
 
 provider "alicloud" {
-  access_key = var.alicloud_access_key
-  secret_key = var.alicloud_secret_key
-  region     = var.alicloud_region
+  region = var.alicloud_region
+  # Credentials via env: ALICLOUD_ACCESS_KEY, ALICLOUD_SECRET_KEY, ALICLOUD_SECURITY_TOKEN
 }
 
 provider "aws" {
-  region     = var.aws_region
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
+  region = var.aws_region
+  # Credentials via env: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN
 }
