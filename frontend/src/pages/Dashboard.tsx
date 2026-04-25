@@ -29,7 +29,7 @@ export default function Dashboard() {
           </p>
           <button
             onClick={() => { window.history.pushState({}, "", "/voice"); window.dispatchEvent(new PopStateEvent("popstate")); }}
-            className="inline-flex items-center gap-2 bg-white text-[#0066FF] font-semibold px-8 py-3 rounded-xl hover:bg-blue-50 transition-colors shadow-lg text-lg"
+            className="inline-flex items-center gap-2 bg-white text-[#0066FF] font-semibold px-8 py-3 rounded-xl hover:bg-blue-50 transition-all shadow-lg text-lg hover:shadow-xl hover:scale-105"
           >
             🎙️ Start Speaking
           </button>
@@ -46,7 +46,7 @@ export default function Dashboard() {
             { label: "Templates", value: stats.total_forms, color: "border-purple-500", icon: "📋" },
             { label: "Languages", value: Object.keys(stats.sessions_by_language).length, color: "border-cyan-500", icon: "🌏" },
           ].map((c) => (
-            <div key={c.label} className={`bg-white rounded-xl p-5 shadow-sm border-l-4 ${c.color}`}>
+            <div key={c.label} className={`bg-white rounded-xl p-5 shadow-sm border-l-4 ${c.color} hover-lift`}>
               <div className="flex items-center gap-2 mb-1">
                 <span>{c.icon}</span>
                 <span className="text-sm text-[#64748B]">{c.label}</span>

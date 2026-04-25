@@ -32,7 +32,7 @@ export default function FormTemplates({ onNavigate, language }: { onNavigate: (p
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((t) => (
-          <div key={t.id} className="bg-white border border-[#E2E8F0] rounded-xl p-6 hover:shadow-md hover:border-[#0066FF]/30 transition-all">
+          <div key={t.id} className="bg-white border border-[#E2E8F0] rounded-xl p-6 hover-lift hover:border-[#0066FF]/30">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-lg text-[#1E293B]">{t.name}</h3>
               <LanguageBadge language={t.language} />
