@@ -14,30 +14,36 @@ export default function FormTemplates({ onNavigate, language }: { onNavigate: (p
     : templates;
 
   return (
-    <div className="p-8">
+    <div className="px-4 py-6 sm:px-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Form Templates</h1>
-        <p className="text-sm text-gray-400">
-          Showing {filtered.length} of {templates.length} templates
-        </p>
+        <div>
+          <h1 className="text-2xl font-bold text-[#1E293B]">Form Templates</h1>
+          <p className="text-sm text-[#64748B] mt-1">Choose a form to fill by voice</p>
+        </div>
+        <span className="text-sm text-[#64748B] bg-white px-3 py-1 rounded-full border border-[#E2E8F0]">
+          {filtered.length} of {templates.length} templates
+        </span>
       </div>
       {filtered.length === 0 && templates.length > 0 && (
-        <p className="text-gray-500 text-center py-8">No templates for this language. Try &quot;All Languages&quot; or switch language in the nav bar.</p>
+        <div className="text-center py-12 bg-white rounded-xl border border-[#E2E8F0]">
+          <p className="text-[#64748B]">No templates for this language.</p>
+          <p className="text-sm text-[#94A3B8] mt-1">Try switching language in the nav bar.</p>
+        </div>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((t) => (
-          <div key={t.id} className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-lg">{t.name}</h3>
+          <div key={t.id} className="bg-white border border-[#E2E8F0] rounded-xl p-6 hover:shadow-md hover:border-[#0066FF]/30 transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-lg text-[#1E293B]">{t.name}</h3>
               <LanguageBadge language={t.language} />
             </div>
-            <p className="text-gray-400 text-sm mb-4">{t.category}</p>
-            <p className="text-xs text-gray-500 mb-4">{t.fields.length} fields</p>
+            <p className="text-[#64748B] text-sm mb-1 capitalize">{t.category}</p>
+            <p className="text-xs text-[#94A3B8] mb-4">{t.fields.length} fields</p>
             <button
               onClick={() => onNavigate(`/voice?template=${t.id}`)}
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-lg py-2 text-sm font-medium transition-colors"
+              className="w-full bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-lg py-2.5 text-sm font-medium transition-colors"
             >
-              Start Voice Fill
+              🎙️ Start Voice Fill
             </button>
           </div>
         ))}

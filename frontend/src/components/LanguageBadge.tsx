@@ -1,8 +1,8 @@
 const langColors: Record<string, string> = {
-  en: "text-blue-400 bg-blue-950",
-  ms: "text-green-400 bg-green-950",
-  zh: "text-yellow-400 bg-yellow-950",
-  ta: "text-purple-400 bg-purple-950",
+  en: "text-[#0066FF] bg-blue-50 border-blue-200",
+  ms: "text-emerald-700 bg-emerald-50 border-emerald-200",
+  zh: "text-amber-700 bg-amber-50 border-amber-200",
+  ta: "text-purple-700 bg-purple-50 border-purple-200",
 };
 
 const langLabels: Record<string, string> = {
@@ -13,11 +13,11 @@ const langLabels: Record<string, string> = {
 };
 
 export default function LanguageBadge({ language }: { language: string }) {
-  const color = langColors[language] || "text-gray-400 bg-gray-800";
+  const color = langColors[language] || "text-gray-600 bg-gray-50 border-gray-200";
   const label = langLabels[language] || language;
 
   return (
-    <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${color}`}>
+    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium border ${color}`}>
       {label}
     </span>
   );
