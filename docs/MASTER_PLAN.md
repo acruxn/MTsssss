@@ -1,7 +1,7 @@
 # FormBuddy — Project Master Plan
 ## TNG Digital FinHack 2026 | Track 1: Financial Inclusion
 
-> Single source of truth. Last updated: 25 Apr 2026, 8:40 PM MYT
+> Single source of truth. Last updated: 26 Apr 2026, 1:50 AM MYT
 
 ---
 
@@ -52,13 +52,19 @@ FormBuddy lives inside the TNG app as a floating mic button. Users speak natural
 
 ### User Flow
 ```
-1. User opens TNG app → sees home screen with balance, quick actions
-2. Taps floating 🎙️ FormBuddy button (or says "Hey FormBuddy")
-3. Speaks naturally: "Nak hantar duit kat Ahmad seratus ringgit untuk sewa"
-4. AI detects: Fund Transfer, recipient=Ahmad, amount=RM100, ref=sewa
-5. Shows confirmation: "Send RM100 to Ahmad for sewa?"
-6. User confirms with Face ID / fingerprint
-7. ✅ Done — TTS reads back: "Sent RM100 to Ahmad"
+NORMAL FLOW (form UIs):
+1. User opens TNG app → sees home screen with REAL balance from API
+2. Taps Transfer/Fuel/Reload → proper form UI with validation
+3. Fills fields → confirms → balance deducts → receipt
+4. Home page balance updates on return
+
+VOICE FLOW (FormBuddy):
+1. User taps floating 🎙️ mic button (bottom-right, ONLY entry to voice)
+2. Speaks naturally: "Nak hantar duit kat Ahmad seratus ringgit untuk sewa"
+3. AI detects: Fund Transfer, recipient=Ahmad, amount=RM100, ref=sewa
+4. Shows ActionFlow: auto-fill screens → confirm → biometric (tap to verify) → receipt
+5. Balance deducts via real API call
+6. TTS reads back: "Sent RM100 to Ahmad" (speech-to-speech)
 ```
 
 ---
@@ -89,6 +95,11 @@ FormBuddy lives inside the TNG app as a floating mic button. Users speak natural
 │  │      pay_toll, pay_parking, buy_insurance,     │  │
 │  │      apply_loan, invest, buy_ticket,           │  │
 │  │      food_delivery, donate                     │  │
+│  │ /api/v1/user/balance  — Real balance (RDS)     │  │
+│  │ /api/v1/user/transfer — Deduct + fraud check   │  │
+│  │ /api/v1/user/pay      — Fuel/reload/bill pay   │  │
+│  │ /api/v1/user/transactions — History from RDS   │  │
+│  │ /api/v1/user/reset    — Demo reset             │  │
 │  │ /api/v1/voice/sessions— Session management     │  │
 │  │ /api/v1/dashboard/stats— Completion metrics    │  │
 │  └────────────────────────┬───────────────────────┘  │
@@ -103,9 +114,10 @@ FormBuddy lives inside the TNG app as a floating mic button. Users speak natural
 │     Alibaba Cloud — ap-southeast-3 (Malaysia/KL)      │
 │                                                      │
 │  RDS MySQL 8.0 (OceanBase-compatible)                │
-│  ├─ users                                            │
+│  ├─ users (balance, name, phone, language)           │
 │  ├─ form_templates                                   │
-│  └─ voice_sessions                                   │
+│  ├─ voice_sessions                                   │
+│  └─ payment_transactions (real deductions)           │
 │                                                      │
 │  OSS (audio/document storage)                        │
 └──────────────────────────────────────────────────────┘
@@ -272,21 +284,37 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 ```
 0:00-0:20  "8 million Malaysians can't use digital payments — not because
             they don't have phones, but because they can't fill the forms."
-0:20-0:40  Show TNG home screen. "FormBuddy lives inside TNG eWallet."
+
+0:20-0:40  Show TNG home screen (real balance from API).
+            "This looks exactly like TNG eWallet. But watch this."
             Point to floating mic button. "Uncle just taps this."
-0:40-1:30  Demo 1: Fuel Payment in Malay
+
+0:40-1:30  Demo 1: Fuel Payment in Malay (speech-to-speech)
             Tap mic → "Nak pump minyak RON95 lima puluh"
-            AI returns: ⛽ Fuel Payment, RON95, RM50
-            Confirm → Success animation
+            AI returns: Fuel Payment, RON95, RM50
+            Agent speaks back confirmation (TTS)
+            Auto-fill screens → Tap to verify (Face ID/Touch ID) → Receipt
+            Balance deducts on home page
+
 1:30-2:10  Demo 2: Fund Transfer in English
             Tap mic → "Send money to Ahmad one hundred ringgit for rent"
-            AI returns: 💸 Fund Transfer, Ahmad, RM100, rent
-            Confirm → Success
-2:10-2:40  Demo 3: Quick — "Check my balance" → instant response
-2:40-3:10  Show Services page. "Any TNG action, any language."
+            AI returns: Fund Transfer, Ahmad, RM100, rent
+            Fraud warning: "First-time recipient"
+            Confirm → Biometric → Success
+            Show balance page — real transaction history
+
+2:10-2:40  Demo 3: Show normal form UIs
+            Tap Transfer button → proper form with validation
+            Tap Fuel → fuel type selector, presets
+            "Both voice AND manual — same backend, same real balance"
+
+2:40-3:10  Demo 4: Check balance in BM → "Baki aku berapa?"
+            Show Services page. "14 TNG actions, 4 languages."
             Architecture: Browser → AWS Lambda → Bedrock AI → Alibaba Cloud RDS (KL)
+
 3:10-3:40  Multi-cloud story: "Data stays in Malaysia on Alibaba Cloud.
             Compute + AI on AWS Singapore. Terraform unifies deployment."
+
 3:40-3:55  Impact: elderly, migrant workers, low-literacy communities
 3:55-4:00  "FormBuddy. Financial inclusion, one voice at a time."
 ```
