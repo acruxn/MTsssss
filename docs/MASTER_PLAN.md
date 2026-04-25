@@ -261,13 +261,23 @@ Deploy:   ./scripts/deploy-lambda.sh
 ```
 0:00-0:20  "8 million Malaysians can't use digital payments — not because
             they don't have phones, but because they can't fill the forms."
-0:20-0:40  Introduce FormBuddy. Show the app.
-0:40-1:30  Demo 1: Fund Transfer in Malay (speak → fill → confirm)
-1:30-2:10  Demo 2: Bill Payment in English (language switch)
-2:10-2:50  Dashboard + Platform story (templates, webhooks)
-2:50-3:30  Architecture diagram (multi-cloud, Terraform)
-3:30-3:50  Impact + who this helps
-3:50-4:00  "FormBuddy. Financial inclusion, one voice at a time."
+0:20-0:40  Show TNG home screen. "FormBuddy lives inside TNG eWallet."
+            Point to floating mic button. "Uncle just taps this."
+0:40-1:30  Demo 1: Fuel Payment in Malay
+            Tap mic → "Nak pump minyak RON95 lima puluh"
+            AI returns: ⛽ Fuel Payment, RON95, RM50
+            Confirm → Success animation
+1:30-2:10  Demo 2: Fund Transfer in English
+            Tap mic → "Send money to Ahmad one hundred ringgit for rent"
+            AI returns: 💸 Fund Transfer, Ahmad, RM100, rent
+            Confirm → Success
+2:10-2:40  Demo 3: Quick — "Check my balance" → instant response
+2:40-3:10  Show Services page. "Any TNG action, any language."
+            Architecture: Browser → AWS Lambda → Bedrock AI → Alibaba Cloud RDS (KL)
+3:10-3:40  Multi-cloud story: "Data stays in Malaysia on Alibaba Cloud.
+            Compute + AI on AWS Singapore. Terraform unifies deployment."
+3:40-3:55  Impact: elderly, migrant workers, low-literacy communities
+3:55-4:00  "FormBuddy. Financial inclusion, one voice at a time."
 ```
 
 ---
@@ -310,18 +320,19 @@ Deploy:   ./scripts/deploy-lambda.sh
 - [x] Terraform: 8 AWS resources in state + 3 manual resources (API GW, Amplify, RDS)
 - [x] OceanBase blocked by STS billing permission → pivoted to RDS MySQL (D9)
 
-### Phase 6: TNG Agent Pivot ⏳ IN PROGRESS
-See `docs/EXECUTION_PLAN.md` for detailed worker prompts and file ownership.
-- [ ] Alpha: Expand detect-intent to support quick actions (fuel, balance, scan, reload)
-- [ ] Bravo: TNG Home screen (mock eWallet with balance, quick actions, floating mic)
-- [ ] Charlie: Agent page (voice-powered action executor with confirmation flow)
-- [ ] Delta: App shell (phone frame, bottom tabs, routing, services page)
-- [ ] Commander: Review, verify, deploy, fix audit issues
+### Phase 6: TNG Agent Pivot ✅ DONE (25 Apr 2026, 7:30 PM)
+- [x] Alpha: Expand detect-intent — returns action_type (fuel_payment, check_balance, scan_pay, pin_reload, form_fill)
+- [x] Bravo: TNGHome.tsx — mock eWallet home with balance, 2×3 quick actions, floating mic
+- [x] Charlie: Agent.tsx — 5-phase voice agent (idle→listening→processing→confirm→success)
+- [x] Delta: AppShell.tsx (phone frame + bottom tabs), Services.tsx, App.tsx routing
+- [x] Commander: Reviewed, fixed TS error, deployed Lambda + Amplify
+- [x] Live tested: fuel_payment ✅, check_balance ✅, form_fill ✅, scan_pay ✅
 
-### Phase 7: Demo Prep
-- [ ] Rebuild + deploy frontend to Amplify
-- [ ] Redeploy Lambda with expanded detect-intent
-- [ ] Update pitch-deck.html
+### Phase 7: Polish + Demo Prep ⏳ IN PROGRESS
+- [ ] Fix CSS animations (ripple-ring, popIn, eq-bar class not wired)
+- [ ] End-to-end live flow test (speak → confirm → success)
+- [ ] Mock Face ID / biometric confirmation step
+- [ ] Update pitch-deck.html with new screenshots
 - [ ] Rehearse demo script
 - [ ] Record demo video (optional)
 
