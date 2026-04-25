@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import AppShell from "./components/AppShell";
 import TNGHome from "./pages/TNGHome";
 import Services from "./pages/Services";
-import Agent from "./pages/Agent";
 import GOfinance from "./pages/GOfinance";
 import EShop from "./pages/EShop";
 import BalancePage from "./pages/BalancePage";
@@ -35,7 +34,6 @@ export default function App() {
     <AppShell currentPath={basePath} onNavigate={navigate} language={language} onLanguageChange={(l) => { setLanguage(l); localStorage.setItem("formbuddy-lang", l); }}>
       {basePath === "/" && <TNGHome onNavigate={navigate} />}
       {basePath === "/services" && <Services onNavigate={navigate} language={language} />}
-      {basePath === "/agent" && <Agent onNavigate={navigate} language={language} />}
       {basePath === "/gofinance" && <GOfinance onNavigate={navigate} />}
       {basePath === "/eshop" && <EShop onNavigate={navigate} />}
       {basePath === "/balance" && <BalancePage onNavigate={navigate} />}
