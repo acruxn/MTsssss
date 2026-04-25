@@ -224,6 +224,7 @@ export default function AppShell({
           fund_transfer: "/transfer", form_fill: "/transfer",
           fuel_payment: "/fuel", pin_reload: "/reload",
           bill_payment: "/bill", scan_pay: "/scan",
+          apply_loan: "/loan",
         };
         const route = routes[actionType] || `/task?action=${actionType}`;
         onNavigate(route + (route.includes("?") ? "&" : "?") + q);

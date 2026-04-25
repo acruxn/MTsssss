@@ -104,7 +104,13 @@ export default function LoanPage({ onNavigate }: { onNavigate: (path: string) =>
       await fetchCreditScore();
       await fetchLoans();
     };
-    setLoanAmount(""); setLoanTenure(6); setLoanResult(null); setExtraction(null);
+    setLoanResult(null); setExtraction(null);
+    // Read prefilled params from URL (from ChatPanel voice action)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("amount")) setLoanAmount(params.get("amount") || "");
+    else setLoanAmount("");
+    if (params.get("tenure")) setLoanTenure(Number(params.get("tenure")) || 6);
+    else setLoanTenure(6);
     init();
   }, [userId, fetchCreditScore, fetchLoans]);
 
