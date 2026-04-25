@@ -14,8 +14,8 @@ resource "alicloud_vswitch" "main" {
 }
 
 resource "alicloud_security_group" "db" {
-  name   = "${var.project_name}-db-sg-${var.environment}"
-  vpc_id = alicloud_vpc.main.id
+  security_group_name = "${var.project_name}-db-sg-${var.environment}"
+  vpc_id              = alicloud_vpc.main.id
 }
 
 resource "alicloud_security_group_rule" "db_mysql" {
