@@ -232,11 +232,11 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
   );
 
   const FieldList = () => (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-      <p className="text-xs text-gray-500 mb-3 uppercase tracking-wide">Fields needed</p>
+    <div className="bg-white border border-[#E2E8F0] rounded-xl p-4">
+      <p className="text-xs text-[#94A3B8] mb-3 uppercase tracking-wide">Fields needed</p>
       <div className="flex flex-wrap gap-2">
         {template?.fields.map((f) => (
-          <span key={f.name} className="inline-flex items-center gap-1 bg-gray-800 rounded-lg px-3 py-1.5 text-sm">
+          <span key={f.name} className="inline-flex items-center gap-1 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-3 py-1.5 text-sm">
             {f.label}
             {f.required && <span className="text-red-400 text-xs">*</span>}
           </span>
@@ -247,11 +247,11 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
 
   return (
     <div className="px-4 py-6 sm:p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-2">🎙️ Voice Assistant</h1>
-      {template && <p className="text-gray-400 mb-6">Filling: {template.name}</p>}
+      <h1 className="text-2xl font-bold mb-2 text-[#1E293B]">🎙️ Voice Assistant</h1>
+      {template && <p className="text-[#64748B] mb-6">Filling: {template.name}</p>}
 
       {error && (
-        <div className="bg-red-900/40 border border-red-800 rounded-lg p-3 mb-4 text-sm text-red-300">{error}</div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-700">{error}</div>
       )}
 
       <style>{fadeInStyle}</style>
@@ -261,14 +261,14 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
         <div style={{ animation: "fadeIn 0.3s ease-in" }}>
           <div className="flex flex-col items-center gap-4 py-12">
             <h2 className="text-xl font-semibold text-center">🎙️ What would you like to do?</h2>
-            <p className="text-gray-400 text-sm text-center">Speak naturally — I'll find the right form for you</p>
+            <p className="text-[#64748B] text-sm text-center">Speak naturally — I'll find the right form for you</p>
             <button
               onClick={handleHomeStart}
-              className="mic-pulse w-32 h-32 rounded-full bg-blue-600 hover:bg-blue-500 transition-all flex items-center justify-center shadow-lg shadow-blue-600/30 mt-4"
+              className="mic-pulse w-32 h-32 rounded-full bg-[#0066FF] hover:bg-[#0052CC] transition-all flex items-center justify-center shadow-lg shadow-[#0066FF]/30 mt-4"
             >
               {MicIcon}
             </button>
-            <p className="text-xs text-gray-600 mt-2">Or <button onClick={() => onNavigate("/templates")} className="text-blue-400 hover:underline">browse templates</button></p>
+            <p className="text-xs text-[#94A3B8] mt-2">Or <button onClick={() => onNavigate("/templates")} className="text-blue-400 hover:underline">browse templates</button></p>
           </div>
         </div>
       )}
@@ -278,29 +278,29 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
           <div className="space-y-6">
             <div className="flex items-center justify-center gap-1 h-16">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-2 rounded-full bg-blue-500 animate-pulse" style={{ height: `${20 + Math.random() * 40}px`, animationDelay: `${i * 0.15}s` }} />
+                <div key={i} className="w-2 rounded-full bg-[#0066FF] animate-pulse" style={{ height: `${20 + Math.random() * 40}px`, animationDelay: `${i * 0.15}s` }} />
               ))}
             </div>
-            <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 min-h-[80px]">
-              <p className="text-xs text-gray-500 mb-1">Live Transcription</p>
-              <p className="text-lg">{transcript || <span className="text-gray-600">Listening...</span>}</p>
+            <div className="bg-white border border-[#E2E8F0] rounded-lg p-4 min-h-[80px]">
+              <p className="text-xs text-[#94A3B8] mb-1">Live Transcription</p>
+              <p className="text-lg">{transcript || <span className="text-[#94A3B8]">Listening...</span>}</p>
             </div>
             <div className="mt-2">
               <input
                 type="text"
                 placeholder="Or type here instead..."
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-4 py-2 text-sm text-[#1E293B] placeholder-[#94A3B8] focus:outline-none focus:border-[#0066FF]"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
                     setTranscript((e.target as HTMLInputElement).value.trim());
                   }
                 }}
               />
-              <p className="text-xs text-gray-600 mt-1">Press Enter to set transcript</p>
+              <p className="text-xs text-[#94A3B8] mt-1">Press Enter to set transcript</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={handleHomeDone} disabled={!transcript.trim()} className="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 text-white rounded-lg py-3 font-medium transition-colors">✓ Done Speaking</button>
-              <button onClick={handleHomeCancel} className="bg-red-700 hover:bg-red-600 text-white rounded-lg py-3 px-6 font-medium transition-colors">Cancel</button>
+              <button onClick={handleHomeDone} disabled={!transcript.trim()} className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white rounded-lg py-3 font-medium transition-colors">✓ Done Speaking</button>
+              <button onClick={handleHomeCancel} className="bg-red-500 hover:bg-red-600 text-white rounded-lg py-3 px-6 font-medium transition-colors">Cancel</button>
             </div>
           </div>
         </div>
@@ -309,8 +309,8 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
       {!templateId && phase === "home-extracting" && (
         <div style={{ animation: "fadeIn 0.3s ease-in" }}>
           <div className="flex flex-col items-center gap-4 py-16">
-            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-400">Detecting intent & extracting fields...</p>
+            <div className="w-12 h-12 border-4 border-[#0066FF] border-t-transparent rounded-full animate-spin" />
+            <p className="text-[#64748B]">Detecting intent & extracting fields...</p>
           </div>
         </div>
       )}
@@ -323,12 +323,12 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
           <div className="flex flex-col items-center gap-4 py-8">
             <button
               onClick={handleStartListening}
-              className="mic-pulse w-32 h-32 rounded-full bg-blue-600 hover:bg-blue-500 transition-all flex items-center justify-center shadow-lg shadow-blue-600/30"
+              className="mic-pulse w-32 h-32 rounded-full bg-[#0066FF] hover:bg-[#0052CC] transition-all flex items-center justify-center shadow-lg shadow-[#0066FF]/30"
             >
               {MicIcon}
             </button>
-            <p className="text-gray-400 text-sm">Tap to start — tell us everything</p>
-            <p className="text-xs text-gray-600">Keyboard fallback available while listening</p>
+            <p className="text-[#64748B] text-sm">Tap to start — tell us everything</p>
+            <p className="text-xs text-[#94A3B8]">Keyboard fallback available while listening</p>
           </div>
         </div>
         </div>
@@ -343,39 +343,39 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className="w-2 rounded-full bg-blue-500 animate-pulse"
+                className="w-2 rounded-full bg-[#0066FF] animate-pulse"
                 style={{ height: `${20 + Math.random() * 40}px`, animationDelay: `${i * 0.15}s` }}
               />
             ))}
           </div>
-          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 min-h-[80px]">
-            <p className="text-xs text-gray-500 mb-1">Live Transcription</p>
-            <p className="text-lg">{transcript || <span className="text-gray-600">Listening...</span>}</p>
+          <div className="bg-white border border-[#E2E8F0] rounded-lg p-4 min-h-[80px]">
+            <p className="text-xs text-[#94A3B8] mb-1">Live Transcription</p>
+            <p className="text-lg">{transcript || <span className="text-[#94A3B8]">Listening...</span>}</p>
           </div>
           <div className="mt-2">
             <input
               type="text"
               placeholder="Or type here instead..."
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-4 py-2 text-sm text-[#1E293B] placeholder-[#94A3B8] focus:outline-none focus:border-[#0066FF]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
                   setTranscript((e.target as HTMLInputElement).value.trim());
                 }
               }}
             />
-            <p className="text-xs text-gray-600 mt-1">Press Enter to set transcript</p>
+            <p className="text-xs text-[#94A3B8] mt-1">Press Enter to set transcript</p>
           </div>
           <div className="flex gap-3">
             <button
               onClick={handleDoneSpeaking}
               disabled={!transcript.trim()}
-              className="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 text-white rounded-lg py-3 font-medium transition-colors"
+              className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white rounded-lg py-3 font-medium transition-colors"
             >
               ✓ Done Speaking
             </button>
             <button
               onClick={handleCancel}
-              className="bg-red-700 hover:bg-red-600 text-white rounded-lg py-3 px-6 font-medium transition-colors"
+              className="bg-red-500 hover:bg-red-600 text-white rounded-lg py-3 px-6 font-medium transition-colors"
             >
               Cancel
             </button>
@@ -388,8 +388,8 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
       {templateId && phase === "extracting" && (
         <div className="animate-fadeIn" style={{ animation: "fadeIn 0.3s ease-in" }}>
         <div className="flex flex-col items-center gap-4 py-16">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-400">Extracting fields with AI...</p>
+          <div className="w-12 h-12 border-4 border-[#0066FF] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[#64748B]">Extracting fields with AI...</p>
         </div>
         </div>
       )}
@@ -399,15 +399,15 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
         <div className="animate-fadeIn" style={{ animation: "fadeIn 0.3s ease-in" }}>
         <div className="space-y-6">
           {matchedName && (
-            <div className="bg-blue-900/30 border border-blue-800 rounded-lg p-3 text-sm text-blue-300">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-[#0066FF]">
               Matched: <span className="font-semibold">{matchedName}</span>
             </div>
           )}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div className="bg-white border border-[#E2E8F0] rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">📋 Extracted Fields</h2>
               {confidence > 0 && (
-                <span className="text-xs bg-gray-800 rounded-full px-3 py-1 text-gray-400">
+                <span className="text-xs bg-[#F8FAFC] rounded-full px-3 py-1 text-[#64748B] border border-[#E2E8F0]">
                   {Math.round(confidence * 100)}% confidence
                 </span>
               )}
@@ -419,14 +419,14 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
                 return (
                   <div
                     key={f.name}
-                    className={`flex justify-between items-center border-b pb-2 ${missing ? "border-red-800" : "border-gray-800"}`}
+                    className={`flex justify-between items-center border-b pb-2 ${missing ? "border-red-800" : "border-[#E2E8F0]"}`}
                   >
                     <span className="text-sm">
-                      <span className="text-gray-400">{f.label}</span>
+                      <span className="text-[#64748B]">{f.label}</span>
                       {f.required && <span className="text-red-400 ml-1">*</span>}
                     </span>
                     <span className={`font-medium ${missing ? "text-yellow-400" : ""}`}>
-                      {val || <span className="text-gray-600">—</span>}
+                      {val || <span className="text-[#94A3B8]">—</span>}
                     </span>
                   </div>
                 );
@@ -436,7 +436,7 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleSubmit}
-              className="flex-1 bg-green-600 hover:bg-green-500 text-white rounded-lg py-3 font-medium transition-colors"
+              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg py-3 font-medium transition-colors"
             >
               ✓ Submit
             </button>
@@ -454,13 +454,13 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
             </button>
             <button
               onClick={handleSpeakAgain}
-              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg py-3 font-medium transition-colors"
+              className="flex-1 bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-lg py-3 font-medium transition-colors"
             >
               🎙️ Speak Again
             </button>
             <button
               onClick={handleReset}
-              className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg py-3 px-4 font-medium transition-colors"
+              className="bg-[#64748B] hover:bg-[#475569] text-white rounded-lg py-3 px-4 font-medium transition-colors"
             >
               Start Over
             </button>
@@ -476,10 +476,10 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
           <p className="text-5xl">✅</p>
           <p className="text-xl font-semibold">Form submitted successfully!</p>
           <div className="flex gap-3 justify-center">
-            <button onClick={handleReset} className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg py-2 px-6 transition-colors">
+            <button onClick={handleReset} className="bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-lg py-2 px-6 transition-colors">
               Fill Another
             </button>
-            <button onClick={() => onNavigate("/")} className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg py-2 px-6 transition-colors">
+            <button onClick={() => onNavigate("/")} className="bg-[#64748B] hover:bg-[#475569] text-white rounded-lg py-2 px-6 transition-colors">
               Dashboard
             </button>
           </div>
