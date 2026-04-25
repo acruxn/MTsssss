@@ -106,5 +106,111 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
     };
   }
 
+  if (actionType === "pay_toll") {
+    return {
+      title: "Toll Payment", icon: "🛣️",
+      steps: [
+        { label: "Vehicle", field: "vehicle", value: s(fields.vehicle), type: "input", autoAdvanceMs: 800 },
+        { label: "Amount (RM)", field: "amount", value: amt || "50", type: "input", autoAdvanceMs: 800 },
+        { label: `Top up RM${amt || "50"} RFID?`, type: "confirm" },
+        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Top-up Successful", type: "receipt" },
+      ],
+    };
+  }
+
+  if (actionType === "pay_parking") {
+    return {
+      title: "Parking Payment", icon: "🅿️",
+      steps: [
+        { label: "Location", field: "location", value: s(fields.location), type: "input", autoAdvanceMs: 800 },
+        { label: "Duration", field: "duration", value: s(fields.duration) || "1 hour", type: "input", autoAdvanceMs: 800 },
+        { label: "Amount (RM)", field: "amount", value: amt || "4", type: "input", autoAdvanceMs: 800 },
+        { label: `Pay RM${amt || "4"} parking?`, type: "confirm" },
+        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Payment Successful", type: "receipt" },
+      ],
+    };
+  }
+
+  if (actionType === "buy_insurance") {
+    return {
+      title: "Insurance", icon: "🛡️",
+      steps: [
+        { label: "Insurance Type", field: "insurance_type", value: s(fields.insurance_type), type: "input", autoAdvanceMs: 800 },
+        { label: "Coverage", field: "coverage", value: s(fields.coverage), type: "input", autoAdvanceMs: 800 },
+        { label: `Purchase ${s(fields.insurance_type) || "insurance"}?`, type: "confirm" },
+        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Purchase Successful", type: "receipt" },
+      ],
+    };
+  }
+
+  if (actionType === "apply_loan") {
+    return {
+      title: "GOpinjam Loan", icon: "💳",
+      steps: [
+        { label: "Loan Amount (RM)", field: "amount", value: amt || "500", type: "input", autoAdvanceMs: 800 },
+        { label: "Tenure", field: "tenure", value: s(fields.tenure) || "3 months", type: "input", autoAdvanceMs: 800 },
+        { label: `Apply RM${amt || "500"} loan?`, type: "confirm" },
+        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Application Submitted", type: "receipt" },
+      ],
+    };
+  }
+
+  if (actionType === "invest") {
+    return {
+      title: "GO+ Investment", icon: "📈",
+      steps: [
+        { label: "Amount (RM)", field: "amount", value: amt || "100", type: "input", autoAdvanceMs: 800 },
+        { label: "Product", field: "product", value: s(fields.product) || "GO+", type: "input", autoAdvanceMs: 800 },
+        { label: `Invest RM${amt || "100"} in ${s(fields.product) || "GO+"}?`, type: "confirm" },
+        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Investment Successful", type: "receipt" },
+      ],
+    };
+  }
+
+  if (actionType === "buy_ticket") {
+    return {
+      title: "Buy Ticket", icon: "🎫",
+      steps: [
+        { label: "Type", field: "type", value: s(fields.type) || "Movie", type: "input", autoAdvanceMs: 800 },
+        { label: "Destination", field: "destination", value: s(fields.destination), type: "input", autoAdvanceMs: 800 },
+        { label: "Date", field: "date", value: s(fields.date), type: "input", autoAdvanceMs: 800 },
+        { label: `Book ${s(fields.type) || "ticket"}?`, type: "confirm" },
+        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Booking Confirmed", type: "receipt" },
+      ],
+    };
+  }
+
+  if (actionType === "food_delivery") {
+    return {
+      title: "Food Delivery", icon: "🍔",
+      steps: [
+        { label: "Restaurant", field: "restaurant", value: s(fields.restaurant), type: "input", autoAdvanceMs: 800 },
+        { label: "Items", field: "items", value: s(fields.items), type: "input", autoAdvanceMs: 800 },
+        { label: `Order from ${s(fields.restaurant) || "restaurant"}?`, type: "confirm" },
+        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Order Placed", type: "receipt" },
+      ],
+    };
+  }
+
+  if (actionType === "donate") {
+    return {
+      title: "Donation", icon: "❤️",
+      steps: [
+        { label: "Organization", field: "organization", value: s(fields.organization), type: "input", autoAdvanceMs: 800 },
+        { label: "Amount (RM)", field: "amount", value: amt || "10", type: "input", autoAdvanceMs: 800 },
+        { label: `Donate RM${amt || "10"} to ${s(fields.organization) || "charity"}?`, type: "confirm" },
+        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Donation Successful", type: "receipt" },
+      ],
+    };
+  }
+
   return null;
 }

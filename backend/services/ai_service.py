@@ -39,7 +39,7 @@ if STRANDS_AVAILABLE:
     ) -> dict:
         """Detect user intent from speech. Call this tool with the detected action.
 
-        action_type must be one of: form_fill, fuel_payment, check_balance, scan_pay, pin_reload, unknown
+        action_type must be one of: form_fill, fuel_payment, check_balance, scan_pay, pin_reload, pay_toll, pay_parking, buy_insurance, apply_loan, invest, buy_ticket, food_delivery, donate, unknown
         """
         global _last_tool_result
         _last_tool_result = {
@@ -194,7 +194,15 @@ class AIService:
             f"- \"fuel_payment\": pay for fuel/petrol/minyak (params: fuel_type, amount, station)\n"
             f"- \"check_balance\": check eWallet balance/baki (no params)\n"
             f"- \"scan_pay\": scan and pay / QR payment at merchant/shop (params: merchant, amount)\n"
-            f"- \"pin_reload\": reload prepaid phone/top up (params: phone, amount, carrier)\n\n"
+            f"- \"pin_reload\": reload prepaid phone/top up (params: phone, amount, carrier)\n"
+            f"- \"pay_toll\": pay highway toll / RFID top-up (params: vehicle, amount)\n"
+            f"- \"pay_parking\": pay street/mall parking (params: location, duration, amount)\n"
+            f"- \"buy_insurance\": purchase/renew insurance (params: insurance_type, coverage)\n"
+            f"- \"apply_loan\": apply for GOpinjam micro loan (params: amount, tenure)\n"
+            f"- \"invest\": GO+ savings or investment (params: amount, product)\n"
+            f"- \"buy_ticket\": movie/bus/train/flight ticket (params: type, destination, date)\n"
+            f"- \"food_delivery\": order food delivery (params: restaurant, items)\n"
+            f"- \"donate\": make donation to NGO/charity (params: organization, amount)\n\n"
             f"IMPORTANT: Always pick the best matching action_type. Use \"form_fill\" only when a template matches. "
             f"Use a quick action when the intent matches even loosely. Only use \"unknown\" if nothing fits at all.\n"
             f"Call the detect_intent_tool with your analysis."
@@ -251,7 +259,9 @@ class AIService:
             "properties": {
                 "action_type": {
                     "type": "string",
-                    "enum": ["form_fill", "fuel_payment", "check_balance", "scan_pay", "pin_reload", "unknown"],
+                    "enum": ["form_fill", "fuel_payment", "check_balance", "scan_pay", "pin_reload",
+                            "pay_toll", "pay_parking", "buy_insurance", "apply_loan", "invest",
+                            "buy_ticket", "food_delivery", "donate", "unknown"],
                     "description": "The detected action type",
                 },
                 "template_id": {"type": "integer", "description": "Form template ID if action_type is form_fill"},
