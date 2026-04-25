@@ -176,9 +176,10 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
       const aType = result.action_type || "unknown";
 
       // Chat response — stay in conversation
-      if (aType === "chat" && result.confirmation_message) {
-        setMessages(prev => [...prev, { role: "assistant", content: result.confirmation_message! }]);
-        speak(result.confirmation_message, result.detected_language || language);
+      if (aType === "chat") {
+        const msg = result.chat_response || result.confirmation_message || "How can I help you?";
+        setMessages(prev => [...prev, { role: "assistant", content: msg }]);
+        speak(result.confirmation_message || msg, result.detected_language || language);
         setProcessing(false);
         return;
       }
