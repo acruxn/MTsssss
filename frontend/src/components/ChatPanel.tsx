@@ -136,7 +136,9 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
     let finalTranscript = webSpeechText;
     let detectedLang = language;
 
-    if (audioChunksRef.current.length > 0) {
+    // If Web Speech got text, use it immediately (fast path)
+    // Only call Transcribe if Web Speech returned nothing (e.g. Chinese/Tamil)
+    if (!finalTranscript && audioChunksRef.current.length > 0) {
       setTranscribing(true);
       try {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
@@ -150,10 +152,10 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
           finalTranscript = result.transcript;
           detectedLang = result.language_code;
         }
-      } catch { /* Transcribe failed — use Web Speech transcript */ }
-      audioChunksRef.current = [];
+      } catch { /* Transcribe failed */ }
       setTranscribing(false);
     }
+    audioChunksRef.current = [];
 
     if (finalTranscript) {
       setInput("");
