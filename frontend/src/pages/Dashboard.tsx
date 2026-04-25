@@ -21,16 +21,41 @@ export default function Dashboard() {
     : [];
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">FormBuddy Dashboard</h1>
+    <div className="p-4 sm:p-8">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-8 sm:p-12 mb-8">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-4 right-4 w-64 h-64 bg-blue-400 rounded-full blur-3xl" />
+          <div className="absolute bottom-4 left-4 w-48 h-48 bg-indigo-400 rounded-full blur-3xl" />
+        </div>
+        <div className="relative z-10 text-center">
+          <p className="text-blue-300 text-sm font-medium mb-2 tracking-wide uppercase">FormBuddy — Voice Form Assistant</p>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4 leading-tight">
+            Can't read the form?<br />
+            <span className="text-blue-300">Just tell us what you need.</span>
+          </h1>
+          <p className="text-blue-200/70 mb-6 max-w-lg mx-auto">
+            Speak in your language — Malay, English, Chinese, or Tamil. AI fills the form for you.
+          </p>
+          <a
+            href="/templates"
+            onClick={(e) => { e.preventDefault(); window.history.pushState({}, "", "/templates"); window.dispatchEvent(new PopStateEvent("popstate")); }}
+            className="inline-flex items-center gap-2 bg-white text-blue-900 font-semibold px-6 py-3 rounded-xl hover:bg-blue-50 transition-colors shadow-lg"
+          >
+            🎙️ Start Voice Fill
+          </a>
+        </div>
+      </div>
 
+      {/* Stats */}
+      <h2 className="text-lg font-semibold mb-4">Overview</h2>
       {!stats ? (
         <p className="text-gray-400">Loading...</p>
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             {cards.map((c) => (
-              <div key={c.label} className={`${c.color} shadow-lg rounded-xl p-6 text-white`}>
+              <div key={c.label} className={`${c.color} rounded-xl p-6 text-white shadow-lg`}>
                 <p className="text-3xl font-bold">{c.value}</p>
                 <p className="text-sm opacity-80 mt-1">{c.label}</p>
               </div>
