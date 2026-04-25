@@ -189,36 +189,31 @@ class AIService:
         )
         prompt = (
             f"A user said: \"{transcript}\" (language: {language})\n\n"
-            f"Available form templates:\n{template_desc}\n\n"
-            f"Quick actions (no form needed):\n"
-            f"- \"fuel_payment\": pay for fuel/petrol/minyak (params: fuel_type, amount, station)\n"
-            f"- \"check_balance\": check eWallet balance/baki (no params)\n"
-            f"- \"scan_pay\": scan and pay / QR payment at merchant/shop (params: merchant, amount)\n"
-            f"- \"pin_reload\": reload prepaid phone/top up (params: phone, amount, carrier)\n"
-            f"- \"pay_toll\": pay highway toll / RFID top-up (params: vehicle, amount)\n"
-            f"- \"pay_parking\": pay street/mall parking (params: location, duration, amount)\n"
-            f"- \"buy_insurance\": purchase/renew insurance (params: insurance_type, coverage)\n"
-            f"- \"apply_loan\": apply for GOpinjam micro loan (params: amount, tenure)\n"
-            f"- \"invest\": GO+ savings or investment (params: amount, product)\n"
-            f"- \"buy_ticket\": movie/bus/train/flight ticket (params: type, destination, date)\n"
-            f"- \"food_delivery\": order food delivery (params: restaurant, items)\n"
-            f"- \"donate\": make donation to NGO/charity (params: organization, amount)\n\n"
-            f"IMPORTANT: Always pick the best matching action_type. Use \"form_fill\" only when a template matches. "
-            f"Use a quick action when the intent matches even loosely. Only use \"unknown\" if nothing fits at all.\n"
+            f"QUICK ACTIONS — check these FIRST, they take priority over form templates:\n"
+            f"- \"fuel_payment\": pay for fuel/petrol/minyak/pump (params: fuel_type, amount, station)\n"
+            f"- \"check_balance\": check eWallet balance/baki/how much money/berapa (NO params needed)\n"
+            f"- \"scan_pay\": scan and pay / QR payment at merchant/shop/kedai (params: merchant, amount)\n"
+            f"- \"pin_reload\": reload prepaid PHONE credit/top up PHONE/tambah nilai TELEFON (params: phone, amount, carrier)\n"
+            f"- \"pay_toll\": pay highway toll / RFID top-up / tol (params: vehicle, amount)\n"
+            f"- \"pay_parking\": pay street/mall parking / parkir (params: location, duration, amount)\n"
+            f"- \"buy_insurance\": purchase/renew insurance / insurans (params: insurance_type, coverage)\n"
+            f"- \"apply_loan\": apply for loan / pinjaman / GOpinjam / micro loan (params: amount, tenure)\n"
+            f"- \"invest\": invest money / GO+ savings / simpan / pelaburan (params: amount, product)\n"
+            f"- \"buy_ticket\": buy ticket / movie / bus / train / flight / tiket (params: type, destination, date)\n"
+            f"- \"food_delivery\": order food / delivery / makanan / nasi lemak (params: restaurant, items)\n"
+            f"- \"donate\": donate / derma / charity / sumbangan / sedekah (params: organization, amount)\n\n"
+            f"FORM TEMPLATES — use \"form_fill\" only when a template matches AND no quick action fits:\n{template_desc}\n\n"
+            f"RULES:\n"
+            f"1. Quick actions ALWAYS take priority over form templates\n"
+            f"2. \"pin_reload\" is ONLY for phone/prepaid credit — NOT for RFID, NOT for donations\n"
+            f"3. \"derma\"/\"donate\"/\"sumbangan\" = \"donate\", NEVER \"pin_reload\"\n"
+            f"4. \"check balance\"/\"baki\"/\"how much\" = \"check_balance\" with empty fields\n"
+            f"5. \"RFID\"/\"tol\" = \"pay_toll\", NEVER \"pin_reload\"\n"
+            f"6. Use \"unknown\" ONLY if absolutely nothing matches\n"
             f"Call the detect_intent_tool with your analysis."
         )
 
-        # Try Strands Agent first
-        if STRANDS_AVAILABLE:
-            try:
-                result = self._strands_detect_intent(prompt)
-                if result:
-                    return result
-                logger.warning("Strands agent returned no result, falling back to _bedrock_tool_call")
-            except Exception as e:
-                logger.error(f"Strands agent error: {e}, falling back to _bedrock_tool_call")
-
-        # Fallback to raw Bedrock tool_use
+        # Use raw Bedrock tool_use directly (more reliable than Strands for hackathon)
         return await self._detect_intent_bedrock_fallback(prompt)
 
     def _strands_detect_intent(self, prompt: str) -> Optional[Dict]:

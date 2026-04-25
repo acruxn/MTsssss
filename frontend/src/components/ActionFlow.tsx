@@ -27,6 +27,41 @@ const FaceIdSvg = (
   </svg>
 );
 
+const FingerprintSvg = (
+  <svg className="w-20 h-20 text-white" viewBox="0 0 96 96" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <path d="M48 20c-15.5 0-28 12.5-28 28" strokeLinecap="round" />
+    <path d="M76 48c0-15.5-12.5-28-28-28" strokeLinecap="round" />
+    <path d="M36 48c0-6.6 5.4-12 12-12s12 5.4 12 12" strokeLinecap="round" />
+    <path d="M48 36v24" strokeLinecap="round" />
+    <path d="M42 48c0 8 2 16 2 24" strokeLinecap="round" />
+    <path d="M54 48c0 6-1 12-3 18" strokeLinecap="round" />
+    <path d="M30 56c0 6 2 12 4 16" strokeLinecap="round" />
+    <path d="M66 56c-1 6-3 10-6 14" strokeLinecap="round" />
+  </svg>
+);
+
+const PinSvg = (
+  <svg className="w-20 h-20 text-white" viewBox="0 0 96 96" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <rect x="24" y="32" width="48" height="40" rx="8" />
+    <path d="M36 32V24a12 12 0 0124 0v8" strokeLinecap="round" />
+    <circle cx="48" cy="52" r="4" fill="currentColor" />
+    <line x1="48" y1="56" x2="48" y2="62" strokeLinecap="round" strokeWidth="3" />
+  </svg>
+);
+
+const SECURITY_METHODS = [
+  { svg: FaceIdSvg, label: "Face ID", verifying: "Scanning face..." },
+  { svg: FingerprintSvg, label: "Touch ID", verifying: "Scanning fingerprint..." },
+  { svg: PinSvg, label: "Security PIN", verifying: "Verifying PIN..." },
+] as const;
+
+// Pick a consistent method per session (based on flow title hash)
+function pickSecurity(seed: string) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+  return SECURITY_METHODS[Math.abs(h) % SECURITY_METHODS.length];
+}
+
 function TypeWriter({ text, onDone }: { text: string; onDone: () => void }) {
   const [shown, setShown] = useState(0);
   const doneRef = useRef(false);
@@ -106,13 +141,14 @@ export default function ActionFlow({ flow, fields, onComplete, onCancel }: Actio
 
   // Biometric overlay
   if (current?.type === "biometric") {
+    const sec = pickSecurity(flow.title);
     return (
       <div className="fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center animate-fadeIn">
         {!stepDone ? (
           <>
-            <div className="animate-pulse">{FaceIdSvg}</div>
-            <p className="text-white text-lg font-semibold mt-6">{current.label}</p>
-            <p className="text-white/60 text-sm mt-2">Verifying identity...</p>
+            <div className="animate-pulse">{sec.svg}</div>
+            <p className="text-white text-lg font-semibold mt-6">{sec.label}</p>
+            <p className="text-white/60 text-sm mt-2">{sec.verifying}</p>
           </>
         ) : (
           <div className="animate-popIn w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center">

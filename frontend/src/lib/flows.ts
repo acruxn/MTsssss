@@ -28,7 +28,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Amount (RM)", field: "amount", value: amt || "50", type: "input", autoAdvanceMs: 800 },
         { label: "Station", field: "station", value: s(fields.station) || "Nearest station", type: "input", autoAdvanceMs: 800 },
         { label: `Pay RM${amt || "50"} for ${fuel}?`, type: "confirm" },
-        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Payment Successful", type: "receipt" },
       ],
     };
@@ -49,7 +49,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Merchant", field: "merchant", value: merchant, type: "input", autoAdvanceMs: 800 },
         { label: "Amount (RM)", field: "amount", value: amt || "0", type: "input", autoAdvanceMs: 800 },
         { label: `Pay RM${amt || "0"} to ${merchant}?`, type: "confirm" },
-        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Payment Successful", type: "receipt" },
       ],
     };
@@ -65,7 +65,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Carrier", field: "carrier", value: carrier, type: "select", options: ["Maxis", "Celcom", "Digi", "U Mobile"], autoAdvanceMs: 800 },
         { label: "Amount (RM)", field: "amount", value: amt || "30", type: "input", autoAdvanceMs: 800 },
         { label: `Reload RM${amt || "30"} to ${phone} (${carrier})?`, type: "confirm" },
-        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Reload Successful", type: "receipt" },
       ],
     };
@@ -83,7 +83,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
           { label: "Amount (RM)", field: "amount", value: amt || "0", type: "input", autoAdvanceMs: 800 },
           { label: "Reference", field: "reference", value: ref, type: "input", autoAdvanceMs: 800 },
           { label: `Send RM${amt || "0"} to ${recipient}?`, type: "confirm" },
-          { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+          { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
           { label: "Transfer Successful", type: "receipt" },
         ],
       };
@@ -100,7 +100,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Account Number", field: "account_no", value: s(fields.account_no), type: "input", autoAdvanceMs: 800 },
         { label: "Amount (RM)", field: "amount", value: amt || "0", type: "input", autoAdvanceMs: 800 },
         { label: `Pay RM${amt || "0"} to ${biller}?`, type: "confirm" },
-        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Payment Successful", type: "receipt" },
       ],
     };
@@ -113,7 +113,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Vehicle", field: "vehicle", value: s(fields.vehicle), type: "input", autoAdvanceMs: 800 },
         { label: "Amount (RM)", field: "amount", value: amt || "50", type: "input", autoAdvanceMs: 800 },
         { label: `Top up RM${amt || "50"} RFID?`, type: "confirm" },
-        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Top-up Successful", type: "receipt" },
       ],
     };
@@ -127,7 +127,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Duration", field: "duration", value: s(fields.duration) || "1 hour", type: "input", autoAdvanceMs: 800 },
         { label: "Amount (RM)", field: "amount", value: amt || "4", type: "input", autoAdvanceMs: 800 },
         { label: `Pay RM${amt || "4"} parking?`, type: "confirm" },
-        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Payment Successful", type: "receipt" },
       ],
     };
@@ -140,7 +140,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Insurance Type", field: "insurance_type", value: s(fields.insurance_type), type: "input", autoAdvanceMs: 800 },
         { label: "Coverage", field: "coverage", value: s(fields.coverage), type: "input", autoAdvanceMs: 800 },
         { label: `Purchase ${s(fields.insurance_type) || "insurance"}?`, type: "confirm" },
-        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Purchase Successful", type: "receipt" },
       ],
     };
@@ -153,7 +153,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Loan Amount (RM)", field: "amount", value: amt || "500", type: "input", autoAdvanceMs: 800 },
         { label: "Tenure", field: "tenure", value: s(fields.tenure) || "3 months", type: "input", autoAdvanceMs: 800 },
         { label: `Apply RM${amt || "500"} loan?`, type: "confirm" },
-        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Application Submitted", type: "receipt" },
       ],
     };
@@ -166,7 +166,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Amount (RM)", field: "amount", value: amt || "100", type: "input", autoAdvanceMs: 800 },
         { label: "Product", field: "product", value: s(fields.product) || "GO+", type: "input", autoAdvanceMs: 800 },
         { label: `Invest RM${amt || "100"} in ${s(fields.product) || "GO+"}?`, type: "confirm" },
-        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Investment Successful", type: "receipt" },
       ],
     };
@@ -180,7 +180,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Destination", field: "destination", value: s(fields.destination), type: "input", autoAdvanceMs: 800 },
         { label: "Date", field: "date", value: s(fields.date), type: "input", autoAdvanceMs: 800 },
         { label: `Book ${s(fields.type) || "ticket"}?`, type: "confirm" },
-        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Booking Confirmed", type: "receipt" },
       ],
     };
@@ -193,7 +193,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Restaurant", field: "restaurant", value: s(fields.restaurant), type: "input", autoAdvanceMs: 800 },
         { label: "Items", field: "items", value: s(fields.items), type: "input", autoAdvanceMs: 800 },
         { label: `Order from ${s(fields.restaurant) || "restaurant"}?`, type: "confirm" },
-        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Order Placed", type: "receipt" },
       ],
     };
@@ -206,7 +206,7 @@ export function getFlow(actionType: string, fields: F): ActionFlow | null {
         { label: "Organization", field: "organization", value: s(fields.organization), type: "input", autoAdvanceMs: 800 },
         { label: "Amount (RM)", field: "amount", value: amt || "10", type: "input", autoAdvanceMs: 800 },
         { label: `Donate RM${amt || "10"} to ${s(fields.organization) || "charity"}?`, type: "confirm" },
-        { label: "Confirm with Face ID", type: "biometric", autoAdvanceMs: 1500 },
+        { label: "Verify Identity", type: "biometric", autoAdvanceMs: 1500 },
         { label: "Donation Successful", type: "receipt" },
       ],
     };
