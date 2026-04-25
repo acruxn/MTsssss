@@ -295,54 +295,35 @@ Deploy:   ./scripts/deploy-lambda.sh
 
 ## 13. EXECUTION TODO
 
-### Phase 1: Verify & Wire ✅ DONE (25 Apr 2026, 2:55 PM)
-- [x] Verify all backend files compile and are consistent
-- [x] Add `webhook_url` to FormTemplate model
-- [x] Remove `axios` from frontend, confirm native fetch
-- [x] Fix api.ts types/routes to match backend schemas
-- [x] Fix Dashboard.tsx, FormTemplates.tsx, VoiceAssistant.tsx field mismatches
-- [x] Fix Python 3.9 compat (type hints)
-- [x] Test backend starts locally with MySQL
-- [x] Test frontend builds (`npm run build`)
-- [x] Wire AWS credentials (pipeline verified, tokens expired — refresh needed)
-- [x] Database running (Docker MySQL on localhost:3306)
+### Phases 1-4: ✅ ALL DONE (25 Apr 2026)
+- Backend: all 14 Python files compile, routes match docs, Bedrock pipeline verified
+- Frontend: React 19 + TypeScript + Tailwind 4, all compiles, 3 pages + 2 components
+- Voice: Web Speech API STT/TTS, 4 languages, detect-intent with Bedrock
+- UI: TNG-inspired theme, animations, mobile-responsive
 
-### Phase 1 — STILL PENDING
-- [x] Refresh AWS STS credentials and re-test Bedrock — WORKING
-- [ ] Refresh Alibaba STS credentials and attempt OceanBase creation
-- [x] Seed demo data (5 users, 9 templates, 10 sessions)
-- [x] Run backend + frontend together — e2e verified, Bedrock extracts fields correctly
+### Phase 5: Infrastructure ✅ DONE (25 Apr 2026, 6:00 PM)
+- [x] Lambda deployed: `finhack-backend-dev` on AWS ap-southeast-1
+- [x] API Gateway HTTP API: `w6qtfxl2va` (Function URL blocked by org SCP)
+- [x] Amplify HTTPS frontend: `https://main.d3is7aj4mo28yv.amplifyapp.com`
+- [x] Alibaba Cloud RDS MySQL: `finhack-formbuddy.mysql.kualalumpur.rds.aliyuncs.com:3306`
+- [x] Lambda connected to Alibaba RDS — full multi-cloud pipeline verified
+- [x] Terraform: 8 AWS resources in state + 3 manual resources (API GW, Amplify, RDS)
+- [x] OceanBase blocked by STS billing permission → pivoted to RDS MySQL (D9)
 
-### Phase 2: Core Voice Flow ✅ DONE
-- [x] Wire VoiceAssistant → backend /voice/extract → Bedrock → form fill
-- [x] Voice readback via browser TTS
-- [x] Confirm/reject flow
-- [x] Test end-to-end: speak English → extract → fill → readback
+### Phase 6: TNG Agent Pivot ⏳ IN PROGRESS
+See `docs/EXECUTION_PLAN.md` for detailed worker prompts and file ownership.
+- [ ] Alpha: Expand detect-intent to support quick actions (fuel, balance, scan, reload)
+- [ ] Bravo: TNG Home screen (mock eWallet with balance, quick actions, floating mic)
+- [ ] Charlie: Agent page (voice-powered action executor with confirmation flow)
+- [ ] Delta: App shell (phone frame, bottom tabs, routing, services page)
+- [ ] Commander: Review, verify, deploy, fix audit issues
 
-### Phase 3: Multi-Language ✅ DONE
-- [x] Language selector in UI
-- [x] Test BM voice → BM extraction → BM readback
-- [x] Seed templates in BM + EN minimum
-
-### Phase 4: Frontend Polish ✅ DONE
-- [x] Gradient theme, mic-pulse animation, hero banner
-- [x] Hero VoiceAssistant page — large mic, animations
-- [x] Mobile-responsive
-- [x] Form field fill animation
-
-### Phase 5: Infrastructure ⏳ PARTIAL
-- [x] Local MySQL running (OceanBase pending — Alibaba STS malformed)
-- [x] Lambda packaged (23MB zip)
-- [ ] Deploy frontend to S3 (optional)
-- [ ] `terraform init && terraform plan` (show IaC exists)
-
-### Phase 6: Demo Prep ⏳ IN PROGRESS
-- [ ] Seed realistic demo data
+### Phase 7: Demo Prep
+- [ ] Rebuild + deploy frontend to Amplify
+- [ ] Redeploy Lambda with expanded detect-intent
+- [ ] Update pitch-deck.html
 - [ ] Rehearse demo script
-- [ ] Record 4-min video
-- [ ] Pitch deck
-- [ ] README + screenshots
-- [ ] GitHub cleanup
+- [ ] Record demo video (optional)
 
 ---
 
@@ -350,24 +331,23 @@ Deploy:   ./scripts/deploy-lambda.sh
 
 | Risk | Mitigation |
 |------|-----------|
-| OceanBase setup slow | Local MySQL — same pymysql driver, zero code change |
-| AWS token expires mid-demo | Refresh before demo. Backend can run locally with env vars |
-| Qwen unavailable | Already using Bedrock as primary. Qwen is optional add-on |
-| Noisy venue breaks voice | Pre-recorded audio clips as backup. Type-to-fill fallback in UI |
-| Lambda deploy fails | Run backend locally (`uvicorn main:app`). Demo still works |
+| AWS token expires mid-demo | Refresh before demo. All infra is deployed — no local dependency |
+| Noisy venue breaks voice | Type-to-fill fallback in Agent page |
+| Lambda cold start slow | Keep Lambda warm with periodic pings |
 | Tamil voice poor | Focus demo on BM + English. Mention Tamil as "supported" |
+| Phone frame looks wrong | Test at 390px (iPhone) and 1440px (laptop). Fallback: full-width mobile |
 
 ---
 
 ## 14. WHAT MAKES US WIN
 
-1. **The demo moment** — Judge speaks, form fills. Visceral.
+1. **The demo moment** — Uncle speaks rojak, AI pays for fuel. Visceral.
 2. **Real problem** — BNM Financial Inclusion Framework identifies this exact gap
-3. **Platform** — Any form, any language, any fintech. Not a one-trick demo.
-4. **Genuine multi-cloud** — Data on Alibaba (where TNG lives), compute on AWS (best AI)
-5. **Sponsor alignment** — OceanBase prominently used, AWS Bedrock, Terraform
-6. **Polish** — Dark mode, animations, mobile-first
-7. **Completeness** — Working prototype + pitch + video + clean GitHub
+3. **Not just forms** — Full AI agent that can execute any TNG action by voice
+4. **Genuine multi-cloud** — Data on Alibaba Cloud Malaysia, compute + AI on AWS Singapore
+5. **Sponsor alignment** — Alibaba Cloud RDS (OceanBase-compatible), AWS Bedrock, Terraform
+6. **Polish** — TNG-style mobile UI, animations, phone frame mockup
+7. **Completeness** — Working prototype + pitch + live URL + clean GitHub
 
 ---
 
