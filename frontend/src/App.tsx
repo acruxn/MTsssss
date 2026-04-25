@@ -12,6 +12,7 @@ import ReloadPage from "./pages/ReloadPage";
 import ScanPage from "./pages/ScanPage";
 import BillPage from "./pages/BillPage";
 import TaskPage from "./pages/TaskPage";
+import LoanPage from "./pages/LoanPage";
 
 export default function App() {
   const [path, setPath] = useState(window.location.pathname + window.location.search);
@@ -44,6 +45,7 @@ export default function App() {
       {basePath === "/scan" && <ScanPage onNavigate={navigate} />}
       {basePath === "/bill" && <BillPage onNavigate={navigate} />}
       {basePath === "/task" && <TaskPage onNavigate={navigate} />}
+      {basePath === "/loan" && <LoanPage onNavigate={navigate} />}
     </AppShell>
   );
 }

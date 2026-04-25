@@ -159,7 +159,7 @@ export default function GOfinance({ onNavigate }: { onNavigate: (path: string) =
             </div>
             <p className="text-center text-sm font-medium text-[#1E293B] mt-3 px-5">Get extra cash with a flexible plan just for you!</p>
             <div className="px-5 pb-5 pt-3">
-              <button onClick={() => onNavigate("/task?action=apply_loan")} className="w-full py-3 rounded-full border-2 border-[#1E293B] text-sm font-semibold text-[#1E293B]">Apply now</button>
+              <button onClick={() => onNavigate("/loan")} className="w-full py-3 rounded-full border-2 border-[#1E293B] text-sm font-semibold text-[#1E293B]">Apply now</button>
             </div>
           </div>
 

@@ -149,8 +149,27 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
           return;
         }
 
+        // Loan actions — redirect to loan page
+        if (aType === "apply_loan") {
+          const msg = result.confirmation_message || "Taking you to GOpinjam Loan. You can upload your bank statement, check your credit score, and apply for a loan there.";
+          setMessages(prev => [...prev, { role: "user", content: text }, { role: "assistant", content: msg }]);
+          await speak(msg, result.detected_language || language);
+          onNavigate("/loan");
+          return;
+        }
+
         // Unknown with no useful response
         if (aType === "unknown" && !result.confirmation_message) {
+          // Check if user is asking about loan-related things
+          const loanKeywords = ["bank statement", "confirm statement", "credit score", "loan", "pinjam", "borrow", "extract", "upload statement"];
+          const textLower = text.toLowerCase();
+          if (loanKeywords.some(k => textLower.includes(k))) {
+            const msg = "Let me take you to the GOpinjam page where you can upload your bank statement, check your credit score, and apply for a loan.";
+            setMessages(prev => [...prev, { role: "user", content: text }, { role: "assistant", content: msg }]);
+            await speak(msg, language);
+            onNavigate("/loan");
+            return;
+          }
           const msg = "I didn't catch that. Could you tell me what you'd like to do? For example: send money, pay bills, or check balance.";
           setMessages(prev => [...prev, { role: "user", content: text }, { role: "assistant", content: msg }]);
           speak(msg, language);
