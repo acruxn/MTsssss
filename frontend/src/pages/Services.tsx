@@ -2,13 +2,44 @@ import { useEffect, useState } from "react";
 import { getTemplates, type FormTemplate } from "../lib/api";
 import LanguageBadge from "../components/LanguageBadge";
 
-const QUICK_ACTIONS = [
-  { icon: "💸", label: "Send Money", desc: "Transfer to anyone instantly", action: "fund_transfer" },
-  { icon: "🧾", label: "Pay Bills", desc: "Utilities, telco, and more", action: "bill_payment" },
-  { icon: "📷", label: "Scan & Pay", desc: "Scan QR to pay merchants", action: "scan_pay" },
-  { icon: "📱", label: "Reload", desc: "Top up prepaid credit", action: "pin_reload" },
-  { icon: "⛽", label: "Fuel", desc: "Pay at the pump", action: "fuel_payment" },
-  { icon: "💰", label: "Balance", desc: "Check your wallet", action: "check_balance" },
+interface ServiceItem {
+  icon: string;
+  label: string;
+  desc: string;
+  action: string;
+  soon?: boolean;
+}
+
+const CATEGORIES: { title: string; items: ServiceItem[] }[] = [
+  { title: "Payments", items: [
+    { icon: "📷", label: "Scan & Pay", desc: "Scan QR to pay merchants", action: "scan_pay" },
+    { icon: "🧾", label: "Pay Bills", desc: "Utilities, telco, broadband", action: "bill_payment" },
+    { icon: "🛣️", label: "Toll", desc: "Highway toll payments", action: "toll_payment", soon: true },
+    { icon: "🅿️", label: "Parking", desc: "Street & mall parking", action: "parking", soon: true },
+  ]},
+  { title: "Money", items: [
+    { icon: "💸", label: "Transfer", desc: "Send money to anyone", action: "fund_transfer" },
+    { icon: "📥", label: "Request Money", desc: "Ask friends to pay you", action: "request_money", soon: true },
+    { icon: "➗", label: "Split Bill", desc: "Divide expenses easily", action: "split_bill", soon: true },
+  ]},
+  { title: "Top-up", items: [
+    { icon: "📱", label: "Reload Phone", desc: "Prepaid credit top-up", action: "pin_reload" },
+    { icon: "🏷️", label: "RFID Top-up", desc: "Reload your TNG RFID tag", action: "rfid_topup", soon: true },
+  ]},
+  { title: "Financial Services", items: [
+    { icon: "📈", label: "GO+ Savings", desc: "Earn daily returns", action: "check_balance" },
+    { icon: "💳", label: "GOpinjam Loan", desc: "Quick personal financing", action: "gopinjam", soon: true },
+    { icon: "🛡️", label: "Insurance", desc: "Travel & device protection", action: "insurance", soon: true },
+  ]},
+  { title: "Lifestyle", items: [
+    { icon: "🎬", label: "Movie Tickets", desc: "Book cinema seats", action: "movies", soon: true },
+    { icon: "🍔", label: "Food Delivery", desc: "Order meals nearby", action: "food", soon: true },
+    { icon: "❤️", label: "Donations", desc: "Give to verified NGOs", action: "donations", soon: true },
+  ]},
+  { title: "Transport", items: [
+    { icon: "⛽", label: "Fuel Payment", desc: "Pay at the pump", action: "fuel_payment" },
+    { icon: "🚆", label: "Bus & Train", desc: "Book tickets instantly", action: "transport", soon: true },
+  ]},
 ];
 
 const categoryIcons: Record<string, string> = {
@@ -35,25 +66,38 @@ export default function Services({ onNavigate, language }: { onNavigate: (path: 
 
   return (
     <div className="px-4 py-6">
-      <h1 className="text-lg font-bold text-[#1E293B] mb-1">What can I help with?</h1>
-      <p className="text-xs text-[#64748B] mb-4">Tap an action or speak to the assistant</p>
+      <h1 className="text-lg font-bold text-[#1E293B] mb-1">All Services</h1>
+      <p className="text-xs text-[#64748B] mb-5">Tap any service or speak to the assistant</p>
 
-      <div className="grid grid-cols-2 gap-3 mb-8">
-        {QUICK_ACTIONS.map((a) => (
-          <button
-            key={a.action}
-            onClick={() => onNavigate(`/agent?action=${a.action}`)}
-            className="bg-white border border-[#E2E8F0] rounded-xl p-4 text-left hover:shadow-md hover:border-[#0066FF]/30 transition-all"
-          >
-            <span className="text-2xl">{a.icon}</span>
-            <p className="font-semibold text-sm text-[#1E293B] mt-2">{a.label}</p>
-            <p className="text-[10px] text-[#94A3B8] mt-0.5 leading-tight">{a.desc}</p>
-            <p className="text-[10px] text-[#0066FF] font-medium mt-2">Try it →</p>
-          </button>
-        ))}
-      </div>
+      {CATEGORIES.map((cat) => (
+        <div key={cat.title} className="mb-5">
+          <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-2">{cat.title}</p>
+          <div className="bg-white rounded-2xl border border-[#E2E8F0] divide-y divide-[#F1F5F9] overflow-hidden">
+            {cat.items.map((item) => (
+              <button
+                key={item.action}
+                onClick={() => !item.soon && onNavigate(`/agent?action=${item.action}`)}
+                disabled={item.soon}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors enabled:active:bg-[#F8FAFC] disabled:opacity-50"
+              >
+                <span className="text-xl w-8 text-center shrink-0">{item.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[#1E293B]">{item.label}</p>
+                  <p className="text-[11px] text-[#94A3B8] leading-tight">{item.desc}</p>
+                </div>
+                {item.soon ? (
+                  <span className="text-[10px] font-medium text-[#94A3B8] bg-[#F1F5F9] rounded-full px-2 py-0.5 shrink-0">Coming Soon</span>
+                ) : (
+                  <span className="text-[#0066FF] text-sm shrink-0">›</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
 
-      <h2 className="text-lg font-bold text-[#1E293B] mb-1">Need to fill a form?</h2>
+      {/* Form Templates from API */}
+      <h2 className="text-lg font-bold text-[#1E293B] mt-8 mb-1">Need to fill a form?</h2>
       <p className="text-xs text-[#64748B] mb-4">{filtered.length} templates available</p>
 
       {Object.keys(grouped).sort().map((cat) => (

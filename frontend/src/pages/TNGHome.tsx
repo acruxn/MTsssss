@@ -1,14 +1,19 @@
 import { useState } from "react";
 
 const SERVICES = [
-  { icon: "💸", label: "Transfer", action: "fund_transfer", bg: "#EBF5FF", color: "#0066FF" },
-  { icon: "🧾", label: "Pay Bills", action: "bill_payment", bg: "#FFF7ED", color: "#EA580C" },
-  { icon: "📱", label: "Reload\nPhone", action: "pin_reload", bg: "#F0FDF4", color: "#16A34A" },
-  { icon: "📷", label: "Scan &\nPay", action: "scan_pay", bg: "#EBF5FF", color: "#0066FF" },
-  { icon: "📈", label: "GO+", action: "check_balance", bg: "#FFFBEB", color: "#CA8A04" },
-  { icon: "🛡️", label: "Insurance", action: "insurance", bg: "#F0F9FF", color: "#0284C7" },
-  { icon: "⛽", label: "Fuel", action: "fuel_payment", bg: "#FEF2F2", color: "#DC2626" },
-  { icon: "•••", label: "More", action: "", bg: "#F5F5F5", color: "#6B7280" },
+  { icon: "📱", label: "Reload", action: "pin_reload", color: "#0066FF" },
+  { icon: "💸", label: "Transfer", action: "fund_transfer", color: "#10B981" },
+  { icon: "🧾", label: "Pay Bills", action: "bill_payment", color: "#F59E0B" },
+  { icon: "📷", label: "Scan &\nPay", action: "scan_pay", color: "#8B5CF6" },
+  { icon: "📈", label: "GO+", action: "invest", color: "#14B8A6" },
+  { icon: "💳", label: "GOpinjam", action: "apply_loan", color: "#EF4444" },
+  { icon: "🎁", label: "GOrewards", action: "", color: "#FFCC00" },
+  { icon: "•••", label: "More", action: "", color: "#6B7280" },
+] as const;
+
+const SECONDARY = [
+  { icon: "🛣️", label: "RFID", action: "pay_toll" },
+  { icon: "🅿️", label: "Toll", action: "pay_toll" },
 ] as const;
 
 const PROMOS: readonly { title: string; sub: string; bg: string; badge: string; dark?: boolean }[] = [
@@ -42,6 +47,18 @@ const EyeClosed = () => (
 
 export default function TNGHome({ onNavigate }: { onNavigate: (path: string) => void }) {
   const [showBalance, setShowBalance] = useState(true);
+  const [toast, setToast] = useState("");
+
+  function handleService(action: string, label: string) {
+    if (label === "GOrewards") {
+      setToast("GOrewards coming soon!");
+      setTimeout(() => setToast(""), 2000);
+    } else if (label === "More") {
+      onNavigate("/services");
+    } else if (action) {
+      onNavigate(`/agent?action=${action}`);
+    }
+  }
 
   return (
     <div className="min-h-screen" style={{ background: "#F5F5F5" }}>
@@ -80,25 +97,45 @@ export default function TNGHome({ onNavigate }: { onNavigate: (path: string) => 
       {/* ── Services Grid ── */}
       <div className="bg-white mx-4 mt-3 rounded-2xl p-4">
         <div className="grid grid-cols-4 gap-y-4">
-          {SERVICES.map((s) => (
+          {SERVICES.map((svc) => (
             <button
-              key={s.label}
-              onClick={() => onNavigate(s.action ? `/agent?action=${s.action}` : "/services")}
+              key={svc.label}
+              onClick={() => handleService(svc.action, svc.label)}
               className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
             >
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
-                style={{ background: s.bg }}
+                style={{ background: `${svc.color}15` }}
               >
-                {s.icon}
+                {svc.icon}
               </div>
               <span className="text-[11px] font-medium text-gray-600 leading-tight text-center whitespace-pre-line">
-                {s.label}
+                {svc.label}
               </span>
             </button>
           ))}
         </div>
+        {/* Secondary: RFID / Toll */}
+        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+          {SECONDARY.map((svc) => (
+            <button
+              key={svc.label}
+              onClick={() => onNavigate(`/agent?action=${svc.action}`)}
+              className="flex items-center gap-2 flex-1 px-3 py-2 rounded-xl bg-gray-50 active:scale-[0.97] transition-transform"
+            >
+              <span className="text-base">{svc.icon}</span>
+              <span className="text-xs font-medium text-gray-600">{svc.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm px-4 py-2 rounded-full shadow-lg animate-fadeIn">
+          {toast}
+        </div>
+      )}
 
       {/* ── Highlights / Promos ── */}
       <div className="mt-3 px-4">
