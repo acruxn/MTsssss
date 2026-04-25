@@ -230,6 +230,7 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
               {MicIcon}
             </button>
             <p className="text-gray-400 text-sm">Tap to start — tell us everything</p>
+            <p className="text-xs text-gray-600">Keyboard fallback available while listening</p>
           </div>
         </div>
         </div>
@@ -252,6 +253,19 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
           <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 min-h-[80px]">
             <p className="text-xs text-gray-500 mb-1">Live Transcription</p>
             <p className="text-lg">{transcript || <span className="text-gray-600">Listening...</span>}</p>
+          </div>
+          <div className="mt-2">
+            <input
+              type="text"
+              placeholder="Or type here instead..."
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
+                  setTranscript((e.target as HTMLInputElement).value.trim());
+                }
+              }}
+            />
+            <p className="text-xs text-gray-600 mt-1">Press Enter to set transcript</p>
           </div>
           <div className="flex gap-3">
             <button
