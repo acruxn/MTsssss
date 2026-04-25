@@ -111,10 +111,18 @@ async def pay(payload: PaymentRequest, db: Session = Depends(get_db)):
     if payload.amount > user.balance:
         raise HTTPException(status_code=400, detail="Insufficient funds")
     warnings = _fraud_checks(payload.amount, user, "", db)
+    # Build human-readable reference
+    detail_parts = []
+    if payload.details:
+        for k, v in payload.details.items():
+            if v:
+                detail_parts.append(str(v))
+    ref = " · ".join(detail_parts) if detail_parts else payload.type
+
     user.balance -= payload.amount
     txn = Transaction(
         user_id=user.id, type=payload.type, amount=-payload.amount,
-        reference=str(payload.details) if payload.details else None,
+        reference=ref,
     )
     db.add(txn)
     db.commit()

@@ -66,7 +66,7 @@ export default function BalancePage({ onNavigate }: { onNavigate: (path: string)
                   <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[#1E293B] truncate">{tx.recipient || tx.reference || tx.type.replace(/_/g, " ")}</p>
+                  <p className="text-sm font-medium text-[#1E293B] truncate">{tx.recipient || (tx.reference && !tx.reference.startsWith("{") ? tx.reference : null) || {transfer:"Transfer",fuel:"Fuel Payment",reload:"Prepaid Reload",bill:"Bill Payment",scan_pay:"Scan & Pay"}[tx.type] || tx.type}</p>
                   <p className="text-[11px] text-[#94A3B8]">{new Date(tx.created_at).toLocaleString()}</p>
                 </div>
                 <span className="text-sm font-semibold tabular-nums" style={{ color: isCredit ? "#16A34A" : "#1E293B" }}>

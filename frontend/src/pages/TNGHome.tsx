@@ -77,7 +77,7 @@ function BlueHeader({ showBal, setShowBal, onNavigate, balance }: { showBal: boo
       </button>
       {/* Buttons */}
       <div className="flex gap-3">
-        <button onClick={() => onNavigate("/reload")} className="flex-1 py-2.5 rounded-full text-sm font-bold bg-white active:scale-[0.97] transition-transform" style={{ color: "#0066FF" }}>+ Add money</button>
+        <button onClick={() => onNavigate("/balance")} className="flex-1 py-2.5 rounded-full text-sm font-bold bg-white active:scale-[0.97] transition-transform" style={{ color: "#0066FF" }}>+ Add money</button>
         <button onClick={() => onNavigate("/balance")} className="flex-1 py-2.5 rounded-full text-sm font-semibold text-white border border-white/40 active:scale-[0.97] transition-transform">Transactions &gt;</button>
       </div>
     </div>
@@ -256,7 +256,8 @@ function RecentTransactions({ onNavigate, txns }: { onNavigate: (p: string) => v
         <p className="text-sm text-gray-400 text-center py-6">No transactions yet</p>
       ) : txns.slice(0, 5).map((tx, i) => {
         const color = getColor(tx.type);
-        const label = tx.recipient ? `${tx.type === "transfer" ? "Transfer to" : tx.type} ${tx.recipient}` : tx.reference || tx.type;
+        const typeLabels: Record<string, string> = { transfer: "Transfer", fuel: "Fuel Payment", reload: "Prepaid Reload", bill: "Bill Payment", scan_pay: "Scan & Pay" };
+        const label = tx.recipient ? `${tx.type === "transfer" ? "Transfer to" : (typeLabels[tx.type] || tx.type) + " –"} ${tx.recipient}` : (tx.reference && !tx.reference.startsWith("{") ? tx.reference : typeLabels[tx.type] || tx.type);
         const date = new Date(tx.created_at).toLocaleDateString("en-MY", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
         return (
           <div key={tx.id} className={`flex items-center gap-3 px-4 py-3 ${i < Math.min(txns.length, 5) - 1 ? "border-b border-gray-50" : ""}`}>
