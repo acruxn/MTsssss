@@ -83,36 +83,38 @@ class AIService:
             return None
 
     async def _bedrock_tool_call(self, prompt: str, tool_name: str, tool_desc: str, schema: Dict) -> Optional[Dict]:
-        """Call Bedrock Claude with tool_use for guaranteed structured JSON."""
+        """Call Bedrock Claude with tool_use for guaranteed structured JSON. Retries once on failure."""
         if not self.bedrock:
             logger.warning("Bedrock not configured")
             return None
-        try:
-            response = self.bedrock.invoke_model(
-                modelId=settings.BEDROCK_MODEL,
-                body=json.dumps({
-                    "anthropic_version": "bedrock-2023-05-31",
-                    "max_tokens": 512,
-                    "messages": [
-                        {"role": "user", "content": prompt}
-                    ],
-                    "tools": [{
-                        "name": tool_name,
-                        "description": tool_desc,
-                        "input_schema": schema,
-                    }],
-                    "tool_choice": {"type": "tool", "name": tool_name},
-                }),
-            )
-            body = json.loads(response["body"].read())
-            for block in body.get("content", []):
-                if block.get("type") == "tool_use":
-                    return block["input"]
-            logger.error("Bedrock tool_use: no tool_use block in response")
-            return None
-        except Exception as e:
-            logger.error(f"Bedrock tool_use error: {e}")
-            return None
+        for attempt in range(2):
+            try:
+                response = self.bedrock.invoke_model(
+                    modelId=settings.BEDROCK_MODEL,
+                    body=json.dumps({
+                        "anthropic_version": "bedrock-2023-05-31",
+                        "max_tokens": 512,
+                        "messages": [
+                            {"role": "user", "content": prompt}
+                        ],
+                        "tools": [{
+                            "name": tool_name,
+                            "description": tool_desc,
+                            "input_schema": schema,
+                        }],
+                        "tool_choice": {"type": "tool", "name": tool_name},
+                    }),
+                )
+                body = json.loads(response["body"].read())
+                for block in body.get("content", []):
+                    if block.get("type") == "tool_use":
+                        return block["input"]
+                logger.error("Bedrock tool_use: no tool_use block in response")
+            except Exception as e:
+                logger.error(f"Bedrock tool_use error (attempt {attempt + 1}): {e}")
+                if attempt == 0:
+                    logger.info("Retrying Bedrock tool_use...")
+        return None
 
     async def dual_analyze(self, prompt: str) -> dict:
         """Run both AIs and merge extracted fields."""
