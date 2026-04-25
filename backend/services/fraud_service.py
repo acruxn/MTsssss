@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -16,7 +17,7 @@ class FormService:
     """Form field extraction from voice transcripts using dual-AI."""
 
     async def extract_fields(
-        self, transcript: str, fields: list[FieldDefinition], language: str
+        self, transcript: str, fields: List[FieldDefinition], language: str
     ) -> dict:
         """Extract form field values from a voice transcript."""
         field_desc = "\n".join(
@@ -38,7 +39,7 @@ class FormService:
             "ai_source": "both" if result.get("qwen") and result.get("bedrock") else "qwen" if result.get("qwen") else "bedrock",
         }
 
-    def get_session(self, db: Session, session_id: int) -> VoiceSession | None:
+    def get_session(self, db: Session, session_id: int) -> Optional[VoiceSession]:
         return db.query(VoiceSession).filter(VoiceSession.id == session_id).first()
 
     def update_filled_data(

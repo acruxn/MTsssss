@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { getTemplate, createSession, submitField, completeSession, type FormTemplate, type VoiceSession } from "../lib/api";
+import { getTemplate, createSession, completeSession, type FormTemplate, type VoiceSession } from "../lib/api";
 
 interface SpeechRecognitionEvent {
   results: { [index: number]: { [index: number]: { transcript: string } }; length: number };
@@ -14,7 +14,7 @@ export default function VoiceAssistant({ onNavigate }: { onNavigate: (path: stri
   const [currentFieldIdx, setCurrentFieldIdx] = useState(0);
   const [filledFields, setFilledFields] = useState<Record<string, string>>({});
   const [phase, setPhase] = useState<"idle" | "filling" | "confirm" | "done">("idle");
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<ReturnType<typeof Object> | null>(null);
   const pulseRef = useRef<HTMLDivElement>(null);
 
   const templateId = new URLSearchParams(window.location.search).get("template") || "";
@@ -28,9 +28,9 @@ export default function VoiceAssistant({ onNavigate }: { onNavigate: (path: stri
   const currentField = template?.fields[currentFieldIdx];
 
   function startRecognition() {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SR = (window as unknown as Record<string, unknown>).SpeechRecognition || (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
     if (!SR) { alert("Speech Recognition not supported in this browser"); return; }
-    const recognition = new SR();
+    const recognition = new (SR as new () => Record<string, unknown>)();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = template?.language === "ms" ? "ms-MY" : template?.language === "zh" ? "zh-CN" : "en-US";
@@ -41,14 +41,16 @@ export default function VoiceAssistant({ onNavigate }: { onNavigate: (path: stri
       }
       setTranscript(final);
     };
-    recognition.onend = () => { if (listening) recognition.start(); };
-    recognition.start();
+    recognition.onend = () => { if (listening) (recognition as Record<string, unknown> & { start: () => void }).start(); };
+    (recognition as Record<string, unknown> & { start: () => void }).start();
     recognitionRef.current = recognition;
     setListening(true);
   }
 
   function stopRecognition() {
-    recognitionRef.current?.stop();
+    if (recognitionRef.current && typeof (recognitionRef.current as Record<string, unknown>).stop === "function") {
+      (recognitionRef.current as Record<string, unknown> & { stop: () => void }).stop();
+    }
     recognitionRef.current = null;
     setListening(false);
   }
@@ -65,14 +67,11 @@ export default function VoiceAssistant({ onNavigate }: { onNavigate: (path: stri
     } catch { setPhase("filling"); startRecognition(); }
   }
 
-  async function handleAcceptField() {
+  function handleAcceptField() {
     if (!currentField || !transcript.trim()) return;
     const value = transcript.trim();
-    const updated = { ...filledFields, [currentField.key]: value };
+    const updated = { ...filledFields, [currentField.name]: value };
     setFilledFields(updated);
-    if (session) {
-      submitField(session.id, currentField.key, value).catch(() => {});
-    }
     setTranscript("");
     if (currentFieldIdx + 1 < (template?.fields.length || 0)) {
       setCurrentFieldIdx(currentFieldIdx + 1);
@@ -211,9 +210,9 @@ export default function VoiceAssistant({ onNavigate }: { onNavigate: (path: stri
             <h2 className="text-lg font-semibold mb-4">📋 Please confirm your entries</h2>
             <div className="space-y-3">
               {template?.fields.map((f) => (
-                <div key={f.key} className="flex justify-between items-center border-b border-gray-800 pb-2">
+                <div key={f.name} className="flex justify-between items-center border-b border-gray-800 pb-2">
                   <span className="text-gray-400 text-sm">{f.label}</span>
-                  <span className="font-medium">{filledFields[f.key] || <span className="text-gray-600">—</span>}</span>
+                  <span className="font-medium">{filledFields[f.name] || <span className="text-gray-600">—</span>}</span>
                 </div>
               ))}
             </div>

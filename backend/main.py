@@ -51,6 +51,8 @@ async def health():
 
 
 # Lambda handler
-from mangum import Mangum  # noqa: E402
-
-handler = Mangum(app)
+try:
+    from mangum import Mangum  # noqa: E402
+    handler = Mangum(app)
+except ImportError:
+    handler = None

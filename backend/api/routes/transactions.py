@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -34,8 +34,8 @@ async def create_form(payload: FormTemplateCreate, db: Session = Depends(get_db)
 
 @router.get("/", response_model=List[FormTemplateResponse])
 async def list_forms(
-    category: str | None = None,
-    language: str | None = None,
+    category: Optional[str] = None,
+    language: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
     """List form templates with optional filters."""
