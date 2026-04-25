@@ -188,12 +188,13 @@ class AIService:
             for t in templates
         )
         prompt = (
-            f"A user said: \"{transcript}\" (language: {language})\n\n"
+            f"A user said: \"{transcript}\" (language hint: {language})\n\n"
             f"QUICK ACTIONS — check these FIRST, they take priority over form templates:\n"
             f"- \"fuel_payment\": pay for fuel/petrol/minyak/pump (params: fuel_type, amount, station)\n"
             f"- \"check_balance\": check eWallet balance/baki/how much money/berapa (NO params needed)\n"
             f"- \"scan_pay\": scan and pay / QR payment at merchant/shop/kedai (params: merchant, amount)\n"
             f"- \"pin_reload\": reload prepaid PHONE credit/top up PHONE/tambah nilai TELEFON (params: phone, amount, carrier)\n"
+            f"- \"bill_payment\": pay bills / utilities / TNB / Unifi / Astro / bayar bil (params: biller, account_no, amount)\n"
             f"- \"pay_toll\": pay highway toll / RFID top-up / tol (params: vehicle, amount)\n"
             f"- \"pay_parking\": pay street/mall parking / parkir (params: location, duration, amount)\n"
             f"- \"buy_insurance\": purchase/renew insurance / insurans (params: insurance_type, coverage)\n"
@@ -210,6 +211,9 @@ class AIService:
             f"4. \"check balance\"/\"baki\"/\"how much\" = \"check_balance\" with empty fields\n"
             f"5. \"RFID\"/\"tol\" = \"pay_toll\", NEVER \"pin_reload\"\n"
             f"6. Use \"unknown\" ONLY if absolutely nothing matches\n"
+            f"7. Set detected_language to the language the user ACTUALLY spoke (detect from transcript, not the hint)\n"
+            f"8. Write confirmation_message in the SAME language the user spoke\n"
+            f"9. For Malay input, respond in Malay. For English, respond in English. For mixed/rojak, respond in the dominant language.\n"
             f"Call the detect_intent_tool with your analysis."
         )
 
@@ -254,7 +258,7 @@ class AIService:
             "properties": {
                 "action_type": {
                     "type": "string",
-                    "enum": ["form_fill", "fuel_payment", "check_balance", "scan_pay", "pin_reload",
+                    "enum": ["form_fill", "fuel_payment", "check_balance", "scan_pay", "pin_reload", "bill_payment",
                             "pay_toll", "pay_parking", "buy_insurance", "apply_loan", "invest",
                             "buy_ticket", "food_delivery", "donate", "unknown"],
                     "description": "The detected action type",
