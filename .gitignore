@@ -28,3 +28,4 @@ dist/
 keys/
 lambda.zip
 backend/.venv312/
+docs/reference/

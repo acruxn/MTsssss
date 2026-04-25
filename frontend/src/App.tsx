@@ -3,6 +3,8 @@ import AppShell from "./components/AppShell";
 import TNGHome from "./pages/TNGHome";
 import Services from "./pages/Services";
 import Agent from "./pages/Agent";
+import GOfinance from "./pages/GOfinance";
+import EShop from "./pages/EShop";
 
 export default function App() {
   const [path, setPath] = useState(window.location.pathname + window.location.search);
@@ -26,6 +28,8 @@ export default function App() {
       {basePath === "/" && <TNGHome onNavigate={navigate} />}
       {basePath === "/services" && <Services onNavigate={navigate} language={language} />}
       {basePath === "/agent" && <Agent onNavigate={navigate} language={language} />}
+      {basePath === "/gofinance" && <GOfinance onNavigate={navigate} />}
+      {basePath === "/eshop" && <EShop onNavigate={navigate} />}
     </AppShell>
   );
 }

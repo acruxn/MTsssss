@@ -1,23 +1,53 @@
 import { type ReactNode, useState } from "react";
 
-const tabs: { label: string; path: string; disabled?: boolean; icon: (active: boolean) => ReactNode }[] = [
-  {
-    label: "Home", path: "/",
-    icon: (a) => <svg className="w-6 h-6" fill={a ? "#0066FF" : "#9CA3AF"} viewBox="0 0 24 24"><path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3l9-8z"/></svg>,
-  },
-  {
-    label: "Wealth", path: "/services",
-    icon: (a) => <svg className="w-6 h-6" fill={a ? "#0066FF" : "#9CA3AF"} viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>,
-  },
-  { label: "Scan", path: "/agent?action=scan_pay", icon: () => null },
-  {
-    label: "Deals", path: "", disabled: true,
-    icon: () => <svg className="w-6 h-6" fill="#9CA3AF" viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9A2 2 0 0011 2H4a2 2 0 00-2 2v7c0 .53.21 1.04.59 1.41l9 9a2 2 0 002.82 0l7-7a2 2 0 000-2.83zM6.5 8A1.5 1.5 0 118 6.5 1.5 1.5 0 016.5 8z"/></svg>,
-  },
-  {
-    label: "Profile", path: "", disabled: true,
-    icon: () => <svg className="w-6 h-6" fill="#9CA3AF" viewBox="0 0 24 24"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/></svg>,
-  },
+/* ── Tab SVG Icons (matching TNG's outlined style) ── */
+const HomeIcon = ({ active }: { active: boolean }) => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill={active ? "#0066FF" : "none"} stroke={active ? "#0066FF" : "#9CA3AF"} strokeWidth={active ? 0 : 1.8}>
+    {active
+      ? <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-4v-6h-4v6H5a1 1 0 01-1-1V10.5z" />
+      : <><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V10.5z" strokeLinecap="round" strokeLinejoin="round" /><path d="M9 21V14h6v7" strokeLinecap="round" strokeLinejoin="round" /></>
+    }
+  </svg>
+);
+
+const EShopIcon = ({ active }: { active: boolean }) => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={active ? "#0066FF" : "#9CA3AF"} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <path d="M16 10a4 4 0 01-8 0" />
+  </svg>
+);
+
+const GOfinanceIcon = ({ active }: { active: boolean }) => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={active ? "#0066FF" : "#9CA3AF"} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M16 8h-4a2 2 0 000 4h2a2 2 0 010 4H8" />
+    <line x1="12" y1="6" x2="12" y2="8" />
+    <line x1="12" y1="16" x2="12" y2="18" />
+  </svg>
+);
+
+const NearMeIcon = ({ active }: { active: boolean }) => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={active ? "#0066FF" : "#9CA3AF"} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+    <circle cx="12" cy="10" r="3" />
+  </svg>
+);
+
+/* ── Scan center icon (overlapping cards, matching reference) ── */
+const ScanIcon = () => (
+  <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="4" width="14" height="12" rx="2" />
+    <rect x="8" y="8" width="14" height="12" rx="2" />
+  </svg>
+);
+
+const TABS: readonly { label: string; path: string; disabled?: boolean }[] = [
+  { label: "Home", path: "/" },
+  { label: "eShop", path: "/eshop" },
+  { label: "Scan", path: "/agent?action=scan_pay" },
+  { label: "GOfinance", path: "/gofinance" },
+  { label: "Near Me", path: "", disabled: true },
 ];
 
 const languages = [
@@ -26,6 +56,16 @@ const languages = [
   { value: "zh", label: "中文 🇨🇳" },
   { value: "ta", label: "தமிழ் 🇮🇳" },
 ];
+
+function TabIcon({ label, active }: { label: string; active: boolean }) {
+  switch (label) {
+    case "Home": return <HomeIcon active={active} />;
+    case "eShop": return <EShopIcon active={active} />;
+    case "GOfinance": return <GOfinanceIcon active={active} />;
+    case "Near Me": return <NearMeIcon active={active} />;
+    default: return null;
+  }
+}
 
 export default function AppShell({
   children,
@@ -69,7 +109,6 @@ export default function AppShell({
             </div>
           )}
         </div>
-        {/* Mock signal/wifi/battery */}
         <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M1 9l2 2a12.73 12.73 0 0118 0l2-2A15.57 15.57 0 001 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a8.49 8.49 0 0110 0l2-2A11.36 11.36 0 005 13z"/></svg>
         <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M17 4h-3V2h-4v2H7v18h10V4zm-1 16H8V6h8v14z"/><rect x="9" y="8" width="6" height="10" opacity=".7"/></svg>
       </div>
@@ -91,7 +130,7 @@ export default function AppShell({
     <div className="relative bg-white border-t border-gray-200 shrink-0">
       {formBuddyPill}
       <div className="flex items-end justify-around h-16 px-1">
-        {tabs.map((t) => {
+        {TABS.map((t) => {
           if (t.label === "Scan") {
             return (
               <button
@@ -100,17 +139,14 @@ export default function AppShell({
                 className="relative -mt-5 flex flex-col items-center"
                 aria-label="Scan & Pay"
               >
-                <div className="w-14 h-14 rounded-full bg-[#FFCC00] flex items-center justify-center shadow-lg shadow-yellow-400/40 hover:bg-[#FFD633] transition-colors active:scale-95">
-                  <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2m0 10v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
-                    <rect x="7" y="7" width="10" height="10" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                <div className="w-14 h-14 rounded-2xl bg-[#0066FF] flex items-center justify-center shadow-lg shadow-blue-500/30 active:scale-95 transition-transform">
+                  <ScanIcon />
                 </div>
-                <span className="text-[10px] font-medium text-gray-400 mt-0.5">Scan</span>
+                <span className="text-[10px] font-medium text-[#0066FF] mt-0.5">Scan</span>
               </button>
             );
           }
-          const active = !t.disabled && t.path && (basePath === t.path || (t.path !== "/" && basePath.startsWith(t.path)));
+          const active = !t.disabled && t.path !== "" && (basePath === t.path || (t.path !== "/" && basePath.startsWith(t.path)));
           return (
             <button
               key={t.label}
@@ -119,8 +155,8 @@ export default function AppShell({
               aria-label={t.label}
               aria-disabled={t.disabled}
             >
-              {t.icon(!!active)}
-              <span className={`text-[10px] font-medium ${active ? "text-[#0066FF]" : "text-gray-400"}`}>{t.label}</span>
+              <TabIcon label={t.label} active={!!active} />
+              <span className={`text-[10px] font-medium ${active ? "text-[#0066FF]" : "text-[#9CA3AF]"}`}>{t.label}</span>
             </button>
           );
         })}
