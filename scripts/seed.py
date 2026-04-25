@@ -182,6 +182,62 @@ def seed():
                 "account_type": "savings",
             }),
         },
+        {
+            "user_id": users[1].id,
+            "form_template_id": forms[0].id,
+            "language": "ms",
+            "status": "completed",
+            "filled_data": json.dumps({"nama_penuh": "Siti Nurhaliza", "no_ic": "850303-14-5522", "telefon": "+60129876543", "alamat": "Jalan Bukit Bintang, KL", "jenis_akaun": "semasa"}),
+        },
+        {
+            "user_id": users[2].id,
+            "form_template_id": forms[2].id,
+            "language": "en",
+            "status": "completed",
+            "filled_data": json.dumps({"policy_number": "POL-2026-001", "claimant_name": "Raj Kumar", "incident_date": "2026-04-20", "description": "Water damage to shop", "claim_amount": 5000}),
+        },
+        {
+            "user_id": users[3].id,
+            "form_template_id": forms[3].id,
+            "language": "zh",
+            "status": "completed",
+            "filled_data": json.dumps({"full_name": "陈美玲", "ic_number": "920515-10-8844", "phone": "+60143334444", "address": "Jalan Imbi, KL"}),
+        },
+        {
+            "user_id": users[0].id,
+            "form_template_id": forms[0].id,
+            "language": "en",
+            "status": "active",
+            "filled_data": json.dumps({"full_name": "Ahmad Razak", "ic_number": "900101-14-5678"}),
+        },
+        {
+            "user_id": users[1].id,
+            "form_template_id": forms[2].id,
+            "language": "en",
+            "status": "completed",
+            "filled_data": json.dumps({"policy_number": "POL-2026-002", "claimant_name": "Siti Nurhaliza", "incident_date": "2026-04-22", "description": "Motorcycle accident", "claim_amount": 3500}),
+        },
+        {
+            "user_id": users[4].id,
+            "form_template_id": forms[0].id,
+            "language": "en",
+            "status": "completed",
+            "filled_data": json.dumps({"full_name": "John Smith", "ic_number": "850515-10-1234", "phone": "+60155556666", "email": "john@example.com", "address": "45 Jalan Ampang, KL", "account_type": "savings"}),
+        },
+        {
+            "user_id": users[2].id,
+            "form_template_id": forms[4].id,
+            "language": "ta",
+            "status": "completed",
+            "filled_data": json.dumps({"full_name": "ராஜ் குமார்", "ic_number": "880707-08-3344", "phone": "+60131112222", "address": "Brickfields, KL"}),
+        },
+        {
+            "user_id": users[0].id,
+            "form_template_id": forms[1].id,
+            "language": "ms",
+            "status": "active",
+            "filled_data": json.dumps({"nama_penuh": "Ahmad bin Razak", "no_ic": "900101-14-5678"}),
+        },
     ]
     for s in demo_sessions:
         db.add(VoiceSession(**s))
