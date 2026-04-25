@@ -245,14 +245,39 @@ Deploy:   ./scripts/deploy-lambda.sh
 
 ---
 
-## 12. EXECUTION TODO
+## 12. DECISIONS LOG
 
-### Phase 1: Verify & Wire (NOW)
-- [ ] Verify all backend files compile and are consistent
-- [ ] Add `webhook_url` to FormTemplate model
-- [ ] Remove `axios` from frontend, confirm native fetch
-- [ ] Test backend starts locally with SQLite/MySQL fallback
-- [ ] Test frontend builds (`npm run build`)
+> Append-only. Newest at bottom.
+
+| # | Decision | Rationale | Date |
+|---|----------|-----------|------|
+| D1 | Local MySQL via Docker for dev, OceanBase for prod | Alibaba STS token was malformed — Docker MySQL gets us running instantly. Same pymysql driver, zero code change. OceanBase remains the target once creds are refreshed. | 25 Apr 2026 |
+| D2 | No Docker middle-step for DB fallback — SQLite or MySQL only | Docker MySQL is fine for local dev. SQLite as emergency fallback. No unnecessary layers. | 25 Apr 2026 |
+| D3 | Mate's "VoiceBridge" docs (docs/note-from-mate/) are reference only | Different product name, different tech stack (Flutter, ApsaraDB, SageMaker, Cognito). Our MASTER_PLAN.md is the single source of truth. Reuse their pitch narrative and market stats for demo day. | 25 Apr 2026 |
+| D4 | Build our MVP first, adopt mate's vision post-hackathon | React web → Flutter mobile, Web Speech API → Transcribe, Lambda → ECS are all natural migration paths. Core backend (FastAPI + Bedrock + OceanBase) stays the same. | 25 Apr 2026 |
+| D5 | Python 3.9 compat required | Dev machine runs 3.9.6 — no `X | Y` union syntax, use `Optional[X]` and `List[X]` | 25 Apr 2026 |
+
+---
+
+## 13. EXECUTION TODO
+
+### Phase 1: Verify & Wire ✅ DONE (25 Apr 2026, 2:55 PM)
+- [x] Verify all backend files compile and are consistent
+- [x] Add `webhook_url` to FormTemplate model
+- [x] Remove `axios` from frontend, confirm native fetch
+- [x] Fix api.ts types/routes to match backend schemas
+- [x] Fix Dashboard.tsx, FormTemplates.tsx, VoiceAssistant.tsx field mismatches
+- [x] Fix Python 3.9 compat (type hints)
+- [x] Test backend starts locally with MySQL
+- [x] Test frontend builds (`npm run build`)
+- [x] Wire AWS credentials (pipeline verified, tokens expired — refresh needed)
+- [x] Database running (Docker MySQL on localhost:3306)
+
+### Phase 1 — STILL PENDING
+- [ ] Refresh AWS STS credentials and re-test Bedrock
+- [ ] Refresh Alibaba STS credentials and attempt OceanBase creation
+- [ ] Seed demo data (`python scripts/seed.py`)
+- [ ] Run backend + frontend together, test end-to-end
 
 ### Phase 2: Core Voice Flow (2-3 hours)
 - [ ] Wire VoiceAssistant → backend /voice/extract → Bedrock → form fill
