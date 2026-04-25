@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getBalance, getTransactions, type PaymentTransaction } from "../lib/api";
 
 /* ══════════════════════════════════════════
    TNGHome — Pixel-perfect TNG eWallet home
@@ -6,16 +7,23 @@ import { useState } from "react";
 
 export default function TNGHome({ onNavigate }: { onNavigate: (path: string) => void }) {
   const [showBal, setShowBal] = useState(false);
+  const [balance, setBalance] = useState<number | null>(null);
+  const [txns, setTxns] = useState<PaymentTransaction[]>([]);
+
+  useEffect(() => {
+    getBalance().then((b) => setBalance(b.balance)).catch(() => setBalance(1234.56));
+    getTransactions().then(setTxns).catch(() => {});
+  }, []);
 
   return (
     <div style={{ background: "#F5F5F5" }}>
-      <BlueHeader showBal={showBal} setShowBal={setShowBal} onNavigate={onNavigate} />
+      <BlueHeader showBal={showBal} setShowBal={setShowBal} onNavigate={onNavigate} balance={balance} />
       <QuickActions onNavigate={onNavigate} />
       <FeatureCards onNavigate={onNavigate} />
       <PromoCarousel />
       <Recommended onNavigate={onNavigate} />
       <MyFavourites onNavigate={onNavigate} />
-      <RecentTransactions onNavigate={onNavigate} />
+      <RecentTransactions onNavigate={onNavigate} txns={txns} />
       <NeedHelp />
       <Footer />
       <FloatingMic onNavigate={onNavigate} />
@@ -24,7 +32,7 @@ export default function TNGHome({ onNavigate }: { onNavigate: (path: string) => 
 }
 
 /* ── PLACEHOLDER ── */
-function BlueHeader({ showBal, setShowBal, onNavigate }: { showBal: boolean; setShowBal: (v: boolean) => void; onNavigate: (p: string) => void }) {
+function BlueHeader({ showBal, setShowBal, onNavigate, balance }: { showBal: boolean; setShowBal: (v: boolean) => void; onNavigate: (p: string) => void; balance: number | null }) {
   return (
     <div style={{ background: "#0066FF" }} className="px-4 pt-3 pb-5">
       {/* Top bar */}
@@ -43,7 +51,7 @@ function BlueHeader({ showBal, setShowBal, onNavigate }: { showBal: boolean; set
       {/* Balance */}
       <div className="flex items-center gap-2 mb-0.5">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-        <span className="text-white text-[26px] font-bold tracking-tight">RM {showBal ? "1,234.56" : "****"}</span>
+        <span className="text-white text-[26px] font-bold tracking-tight">RM {showBal ? (balance !== null ? balance.toLocaleString("en-MY", { minimumFractionDigits: 2 }) : "—") : "****"}</span>
         <button onClick={() => setShowBal(!showBal)} className="ml-1 opacity-70">
           {showBal ? (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -218,32 +226,36 @@ function MyFavourites({ onNavigate }: { onNavigate: (p: string) => void }) {
     </div>
   );
 }
-function RecentTransactions({ onNavigate }: { onNavigate: (p: string) => void }) {
-  const txns = [
-    { label: "RON95 Fuel - Petronas", amount: -50.0, date: "Today, 2:30 PM", color: "#0066FF" },
-    { label: "Transfer to Ahmad", amount: -100.0, date: "Today, 11:15 AM", color: "#10B981" },
-    { label: "TNB Bill Payment", amount: -156.8, date: "Today, 9:00 AM", color: "#F59E0B" },
-  ];
+function RecentTransactions({ onNavigate, txns }: { onNavigate: (p: string) => void; txns: PaymentTransaction[] }) {
+  const typeColor: Record<string, string> = { transfer: "#10B981", fuel: "#0066FF", reload: "#8B5CF6", bill: "#F59E0B" };
+  const getColor = (type: string) => typeColor[type] || "#6B7280";
   return (
     <div className="bg-white mx-4 mt-5 rounded-2xl overflow-hidden shadow-sm">
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <p className="text-sm font-bold text-gray-900">Recent Transactions</p>
         <button onClick={() => onNavigate("/balance")} className="text-xs font-semibold" style={{ color: "#0066FF" }}>See All</button>
       </div>
-      {txns.map((tx, i) => (
-        <div key={i} className={`flex items-center gap-3 px-4 py-3 ${i < txns.length - 1 ? "border-b border-gray-50" : ""}`}>
-          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: tx.color + "15" }}>
-            <div className="w-2.5 h-2.5 rounded-full" style={{ background: tx.color }} />
+      {txns.length === 0 ? (
+        <p className="text-sm text-gray-400 text-center py-6">No transactions yet</p>
+      ) : txns.slice(0, 5).map((tx, i) => {
+        const color = getColor(tx.type);
+        const label = tx.recipient ? `${tx.type === "transfer" ? "Transfer to" : tx.type} ${tx.recipient}` : tx.reference || tx.type;
+        const date = new Date(tx.created_at).toLocaleDateString("en-MY", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+        return (
+          <div key={tx.id} className={`flex items-center gap-3 px-4 py-3 ${i < Math.min(txns.length, 5) - 1 ? "border-b border-gray-50" : ""}`}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: color + "15" }}>
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate capitalize">{label}</p>
+              <p className="text-[11px] text-gray-400">{date}</p>
+            </div>
+            <span className="text-sm font-semibold tabular-nums" style={{ color: tx.amount > 0 ? "#16A34A" : "#1E293B" }}>
+              {tx.amount > 0 ? "+" : "-"}RM {Math.abs(tx.amount).toFixed(2)}
+            </span>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{tx.label}</p>
-            <p className="text-[11px] text-gray-400">{tx.date}</p>
-          </div>
-          <span className="text-sm font-semibold tabular-nums" style={{ color: tx.amount > 0 ? "#16A34A" : "#1E293B" }}>
-            {tx.amount > 0 ? "+" : "-"}RM {Math.abs(tx.amount).toFixed(2)}
-          </span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

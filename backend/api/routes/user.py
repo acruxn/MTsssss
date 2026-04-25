@@ -111,3 +111,15 @@ async def pay(payload: PaymentRequest, db: Session = Depends(get_db)):
         "success": True, "balance": user.balance, "transaction_id": txn.id,
         "warnings": warnings, "message": f"Payment of RM{payload.amount:.2f} ({payload.type}) successful",
     }
+
+
+@router.post("/reset")
+async def reset_demo(db: Session = Depends(get_db)):
+    """Reset demo user balance and clear transactions."""
+    user = db.query(User).filter(User.id == DEMO_USER_ID).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Demo user not found")
+    user.balance = 1234.56
+    db.query(Transaction).filter(Transaction.user_id == DEMO_USER_ID).delete()
+    db.commit()
+    return {"balance": 1234.56, "message": "Demo reset complete"}

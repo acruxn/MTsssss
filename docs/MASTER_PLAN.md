@@ -359,15 +359,38 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 - [ ] Rehearse demo script
 - [ ] Record demo video (optional)
 
-### Phase 8: Pixel-Perfect TNG UI 🔄 IN PROGRESS (26 Apr 2026)
-- [ ] Extract assets from TNG APK + CDN (real icons, not emojis)
-- [ ] Rewrite TNGHome.tsx — pixel-perfect match to real TNG app
-- [ ] Rewrite AppShell.tsx — exact TNG bottom tab bar (Home, eShop, Scan, GOfinance, Near Me)
-- [ ] Build GOfinance.tsx — static mockup matching real app
-- [ ] Build eShop.tsx — static mockup matching real app
-- [ ] Fix Services.tsx — all 14 actions enabled with correct action names
-- [ ] Update App.tsx routing for new pages
-- [ ] Build + deploy + verify
+### Phase 8: Pixel-Perfect TNG UI ✅ DONE (26 Apr 2026, 12:00 AM)
+- [x] Extract assets from TNG APK + CDN (real icons, not emojis)
+- [x] Rewrite TNGHome.tsx — styled components matching real TNG app
+- [x] Rewrite AppShell.tsx — exact TNG bottom tab bar (Home, eShop, Scan, GOfinance, Near Me)
+- [x] Build GOfinance.tsx — static mockup matching real app
+- [x] Build eShop.tsx — static mockup matching real app
+- [x] Fix Services.tsx — all 14 actions enabled with correct action names
+- [x] Update App.tsx routing for new pages
+- [x] Build + deploy + verify
+
+### Phase 9: End-to-End Working Prototype ✅ DONE (26 Apr 2026, 1:00 AM)
+- [x] Backend: User balance + transaction endpoints (GET balance, GET transactions, POST transfer, POST pay)
+- [x] Backend: Fraud/anomaly detection (>RM500, >80% balance, first-time recipient)
+- [x] Frontend: TransferPage.tsx — proper form with real API calls
+- [x] Frontend: FuelPage.tsx — fuel type selector, presets, real API
+- [x] Frontend: ReloadPage.tsx — phone, carrier, presets, real API
+- [x] Frontend: BalancePage.tsx — real balance + transaction history from API
+- [x] Fix navigation — form UIs for actions, voice only from floating mic button
+- [x] Database: Added balance column to users, created payment_transactions table
+- [x] Deploy + test end-to-end: balance deducts, fraud warnings, insufficient funds rejected
+
+### Phase 10: Polish + Completion 🔄 IN PROGRESS (26 Apr 2026)
+- [ ] TNGHome: fetch real balance from API (not hardcoded)
+- [ ] TNGHome: fetch real transactions from API (not hardcoded)
+- [ ] Voice agent: wire to real transfer/pay endpoints (deduct balance on voice flow completion)
+- [ ] Reset balance endpoint for demo day
+- [ ] Bill payment form page
+- [ ] GOfinance: show real balance from API
+- [ ] Remove remaining emojis from Home + Services pages
+- [ ] Push to GitHub (https://github.com/acruxn/MTsssss.git)
+- [ ] Update MASTER_PLAN, README, pitch deck with final state
+- [ ] Demo rehearsal
 
 ---
 

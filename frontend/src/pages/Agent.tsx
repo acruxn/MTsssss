@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   getTemplate, createSession, extractFields, completeSession, detectIntent,
+  postPayment, postTransfer,
   type FormTemplate, type VoiceSession, type ExtractedFields,
 } from "../lib/api";
 import { stopSpeaking } from "../lib/speech";
@@ -230,6 +231,18 @@ export default function Agent({ onNavigate, language = "en" }: { onNavigate: (pa
           flow={flow}
           fields={extracted as Record<string, unknown>}
           onComplete={async () => {
+            const amt = parseFloat(String(extracted.amount || extracted.jumlah || "0")) || 0;
+            const recipient = String(extracted.recipient || extracted.penerima || "");
+            const skipPayment = ["check_balance", "scan_pay"].includes(actionType);
+            try {
+              if (!skipPayment && amt > 0) {
+                if (actionType === "fund_transfer" || actionType === "form_fill") {
+                  await postTransfer(recipient, amt, String(extracted.reference || extracted.rujukan || ""));
+                } else {
+                  await postPayment(actionType, amt, extracted as Record<string, unknown>);
+                }
+              }
+            } catch { /* demo — don't block flow */ }
             if (session) await completeSession(session.id).catch(() => {});
             setPhase("success");
           }}

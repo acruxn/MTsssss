@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getBalance } from "../lib/api";
 
 const TRANSACTIONS = [
   { name: "Exit Toll: PANTAI DALAM EAST", amount: "2.30" },
@@ -37,6 +38,11 @@ export default function GOfinance({ onNavigate }: { onNavigate: (path: string) =
   const [showSteps, setShowSteps] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(true);
   const [cfTab, setCfTab] = useState<"in" | "out">("out");
+  const [balance, setBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    getBalance().then(b => setBalance(b.balance)).catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
@@ -65,7 +71,7 @@ export default function GOfinance({ onNavigate }: { onNavigate: (path: string) =
               <button onClick={() => setShowBal(!showBal)} className="text-gray-400"><EyeOpen /></button>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-[#1E293B]">{showBal ? "RM 1,234.56" : "RM ****"}</span>
+              <span className="text-2xl font-bold text-[#1E293B]">{showBal ? `RM ${balance !== null ? balance.toLocaleString("en-MY", { minimumFractionDigits: 2 }) : "—"}` : "RM ****"}</span>
               <ChevDown />
             </div>
           </div>
