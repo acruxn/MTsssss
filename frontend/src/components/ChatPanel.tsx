@@ -17,6 +17,7 @@ interface SpeechRecognitionEvent {
 }
 
 const LANG_MAP: Record<string, string> = { en: "en-US", ms: "ms-MY", zh: "zh-CN", "zh-HK": "zh-HK", ta: "ta-IN" };
+const LANG_LABELS: Record<string, string> = { en: "EN 🇬🇧", ms: "BM 🇲🇾", zh: "中文", "zh-HK": "粵語", ta: "தமிழ்" };
 
 const ACTION_META: Record<string, string> = {
   fuel_payment: "Fuel Payment", bill_payment: "Bill Payment", fund_transfer: "Fund Transfer",
@@ -51,6 +52,14 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
       setPanelState("hidden");
     }
   }, [isOpen]);
+
+  // Restart recognition when language changes mid-recording
+  useEffect(() => {
+    if (recording) {
+      stopRecording();
+      setTimeout(() => startRecording(), 100);
+    }
+  }, [language]);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -215,7 +224,8 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
             <div className="w-8 h-8 rounded-full bg-[#0066FF] flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
             </div>
-            <span className="text-sm font-bold text-[#1E293B]">FormBuddy Assistant</span>
+            <span className="text-sm font-bold text-[#1E293B]">FormBuddy</span>
+            <span className="text-[10px] bg-blue-50 text-[#0066FF] px-2 py-0.5 rounded-full font-medium">{LANG_LABELS[language] || "EN"}</span>
           </div>
           <button onClick={handleClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
