@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     AWS_REGION: str = "ap-southeast-1"
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""
-    BEDROCK_MODEL: str = "apac.anthropic.claude-sonnet-4-20250514-v1:0"
+    BEDROCK_MODEL: str = "global.anthropic.claude-sonnet-4-6"
     AWS_SESSION_TOKEN: str = ""
 
     class Config:

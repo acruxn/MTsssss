@@ -2,6 +2,7 @@ const LANG_MAP: Record<string, string> = {
   en: "en-US",
   ms: "ms-MY",
   zh: "zh-CN",
+  "zh-HK": "zh-HK",
   ta: "ta-IN",
 };
 

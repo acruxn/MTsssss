@@ -15,7 +15,7 @@ interface SpeechRecognitionEvent {
 
 type Phase = "idle" | "listening" | "processing" | "flow" | "success";
 
-const LANG_MAP: Record<string, string> = { en: "en-US", ms: "ms-MY", zh: "zh-CN", ta: "ta-IN" };
+const LANG_MAP: Record<string, string> = { en: "en-US", ms: "ms-MY", zh: "zh-CN", "zh-HK": "zh-HK", ta: "ta-IN" };
 
 const ACTION_META: Record<string, { emoji: string; label: string }> = {
   fuel_payment: { emoji: "⛽", label: "Fuel Payment" },

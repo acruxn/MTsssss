@@ -54,6 +54,7 @@ const languages = [
   { value: "en", label: "EN 🇬🇧" },
   { value: "ms", label: "BM 🇲🇾" },
   { value: "zh", label: "中文 🇨🇳" },
+  { value: "zh-HK", label: "粵語 🇭🇰" },
   { value: "ta", label: "தமிழ் 🇮🇳" },
 ];
 
