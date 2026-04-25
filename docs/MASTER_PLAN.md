@@ -133,11 +133,21 @@ IaC: Terraform (alicloud + aws providers)
 ```
 
 ### Live URLs
-| Service | URL |
-|---------|-----|
-| Frontend (HTTPS) | https://main.d3is7aj4mo28yv.amplifyapp.com |
-| Backend API | https://w6qtfxl2va.execute-api.ap-southeast-1.amazonaws.com |
-| Database | finhack-formbuddy.mysql.kualalumpur.rds.aliyuncs.com:3306 |
+| Service | URL | Owner |
+|---------|-----|-------|
+| Frontend (HTTPS) | https://main.d3is7aj4mo28yv.amplifyapp.com | Us |
+| Backend API | https://w6qtfxl2va.execute-api.ap-southeast-1.amazonaws.com | Us |
+| Loan/BDA API | https://ku63fvg2sc.execute-api.ap-southeast-1.amazonaws.com | Teammate — DO NOT MODIFY |
+| Database | finhack-formbuddy.mysql.kualalumpur.rds.aliyuncs.com:3306 | Us |
+
+### Teammate's Loan/BDA Lambdas (DO NOT MODIFY)
+Separate API Gateway (`FinBuddy-API`) with 16 Lambdas for credit scoring, bank statement extraction (Bedrock Nova), loan disbursement, and verification. Called by `frontend/src/pages/LoanPage.tsx`. Endpoints:
+- `POST /credit/score` — credit score from bank data
+- `POST /upload/link` — presigned S3 upload for bank statements
+- `POST /download/link` — presigned S3 download
+- `POST /extraction/extract` — AI extraction of bank statement
+- `POST /extraction/confirm` — confirm extracted data
+- `POST /loan/apply` — loan application + status
 
 ---
 
