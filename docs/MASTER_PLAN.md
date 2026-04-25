@@ -408,17 +408,24 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 - [x] Database: Added balance column to users, created payment_transactions table
 - [x] Deploy + test end-to-end: balance deducts, fraud warnings, insufficient funds rejected
 
-### Phase 10: Polish + Completion 🔄 IN PROGRESS (26 Apr 2026)
-- [ ] TNGHome: fetch real balance from API (not hardcoded)
-- [ ] TNGHome: fetch real transactions from API (not hardcoded)
-- [ ] Voice agent: wire to real transfer/pay endpoints (deduct balance on voice flow completion)
-- [ ] Reset balance endpoint for demo day
-- [ ] Bill payment form page
-- [ ] GOfinance: show real balance from API
-- [ ] Remove remaining emojis from Home + Services pages
-- [ ] Push to GitHub (https://github.com/acruxn/MTsssss.git)
-- [ ] Update MASTER_PLAN, README, pitch deck with final state
-- [ ] Demo rehearsal
+### Phase 10: Polish + Completion ✅ DONE (26 Apr 2026, 2:00 AM)
+- [x] TNGHome: fetch real balance from API (not hardcoded)
+- [x] TNGHome: fetch real transactions from API (not hardcoded)
+- [x] TNGHome: balance refreshes on focus/visibility change
+- [x] TNGHome: navigation fixed — form UIs for actions, only mic → /agent
+- [x] Voice agent: speech-to-speech (TTS speaks back confirmation + "Done")
+- [x] Voice agent: wired to real transfer/pay endpoints (deduct balance on flow completion)
+- [x] Security: biometric requires tap to verify (human-in-the-loop)
+- [x] Security: 3 methods — Face ID, Touch ID, Security PIN
+- [x] Language: STT/TTS uses selected language (EN, BM, ZH, TA)
+- [x] ScanPage: QR scan mock with merchant + amount + real payment
+- [x] BillPage: proper form UI with biller/account/amount
+- [x] Reset balance endpoint for demo day
+- [x] GOfinance: shows real balance from API
+- [x] Services: SVG icons replace all emojis
+- [x] Push to GitHub (https://github.com/acruxn/MTsssss.git)
+- [x] Update MASTER_PLAN, README with final state
+- [ ] Rehearse demo script
 
 ---
 
