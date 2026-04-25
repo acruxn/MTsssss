@@ -141,8 +141,11 @@ export default function LoanPage({ onNavigate }: { onNavigate: (path: string) =>
     try {
       await api("/extraction/confirm", { userId: `USR00${userId}`, extractionId: extraction.documentId, s3Key: extraction.s3Key, extraction: extraction.extraction });
       setExtraction(null);
-      setToast({ type: "success", message: "Bank statement confirmed! Refresh to update credit score." });
-    } catch { setToast({ type: "error", message: "Confirmation failed." }); }
+      setToast({ type: "success", message: "✅ Bank statement confirmed! Updating credit score..." });
+      // Auto-refresh credit score after confirmation
+      await fetchCreditScore();
+      setToast({ type: "success", message: "✅ Bank statement confirmed! Credit score updated." });
+    } catch { setToast({ type: "error", message: "Confirmation failed. Please try again." }); }
     finally { setConfirming(false); setTimeout(() => setToast(null), 6000); }
   };
 
