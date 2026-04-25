@@ -117,4 +117,13 @@ def _parse_json(text: str) -> Optional[dict]:
     try:
         return json.loads(text)
     except (json.JSONDecodeError, TypeError):
+        # Strip markdown code fences (```json ... ```)
+        stripped = text.strip()
+        if stripped.startswith("```"):
+            lines = stripped.split("\n")
+            lines = [l for l in lines if not l.strip().startswith("```")]
+            try:
+                return json.loads("\n".join(lines))
+            except (json.JSONDecodeError, TypeError):
+                pass
         return {"raw": text}

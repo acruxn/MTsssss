@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 # --- Form Template ---
@@ -47,7 +47,7 @@ class VoiceInput(BaseModel):
 
 
 class ExtractedFields(BaseModel):
-    fields: Dict[str, Optional[str]]
+    fields: Dict[str, Optional[Any]]
     confidence: float
     ai_source: str  # qwen, bedrock, both
 
