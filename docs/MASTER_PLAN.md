@@ -1,7 +1,7 @@
 # FormBuddy — Project Master Plan
 ## TNG Digital FinHack 2026 | Track 1: Financial Inclusion
 
-> Single source of truth. Last updated: 26 Apr 2026, 1:50 AM MYT
+> Single source of truth. Last updated: 26 Apr 2026, 2:35 AM MYT
 
 ---
 
@@ -104,7 +104,7 @@ VOICE FLOW (FormBuddy):
 │  │ /api/v1/dashboard/stats— Completion metrics    │  │
 │  └────────────────────────┬───────────────────────┘  │
 │                           │                          │
-│  Bedrock Claude Sonnet 4  │  Amplify (HTTPS hosting) │
+│  Bedrock Claude Sonnet 4.6  │  Amplify (HTTPS hosting) │
 │  (tool_use for intent +   │  CloudWatch (5min warm)  │
 │   extraction AI)          │                          │
 └───────────────────────────┼──────────────────────────┘
@@ -174,7 +174,7 @@ Tested 25 Apr 2026, 8:30 PM MYT — all live and deployed.
 | Layer | Technology | Cloud | Verified |
 |-------|-----------|-------|----------|
 | **Voice I/O** | Web Speech API | Browser (free) | N/A — browser native |
-| **AI** | Bedrock Claude Sonnet 4 | AWS ap-southeast-1 | ✅ Tested |
+| **AI** | Bedrock Claude Sonnet 4.6 | AWS ap-southeast-1 | ✅ Tested |
 | **AI Method** | Strands Agents SDK + tool_use (schema-enforced JSON) | AWS Bedrock | ✅ Reliable structured output |
 | **Backend** | FastAPI + Mangum (Lambda) | AWS ap-southeast-1 | ✅ Live, 60s timeout |
 | **Database** | RDS MySQL 8.0 (OceanBase-compatible) | Alibaba ap-southeast-3 | ✅ Live in KL |
@@ -185,7 +185,7 @@ Tested 25 Apr 2026, 8:30 PM MYT — all live and deployed.
 ### Why This Split
 
 - **Alibaba Cloud for data** — OceanBase is TNG Digital's production DB (Fintechnews.sg, 2026). Data stays in Malaysia region. Same engine = zero migration friction for production integration.
-- **AWS for compute + AI** — Bedrock Claude Sonnet 4 is the best model for structured JSON extraction from multilingual text. Lambda is zero-ops serverless.
+- **AWS for compute + AI** — Bedrock Claude Sonnet 4.6 is the best model for structured JSON extraction from multilingual text. Lambda is zero-ops serverless.
 - **Browser for voice** — Web Speech API supports BM, ZH, TA, EN with zero cost and zero latency.
 
 ---
@@ -241,9 +241,12 @@ AI receives transcript + field definitions → returns extracted values:
 | English | ✅ | ✅ | ✅ Tested |
 | Malay (BM) | ✅ | ✅ | ✅ Tested |
 | Mandarin | ✅ | ✅ | ✅ |
+| Cantonese (粵語) | ✅ | ✅ | ✅ |
 | Tamil | ✅ | ✅ | ✅ |
 
-Primary voice I/O is browser-native. All 4 languages work. Bedrock handles the intelligence (field extraction from any language).
+Primary voice I/O is browser-native. All 5 languages work. Bedrock handles the intelligence (field extraction from any language).
+
+**Auto language detection**: The AI detects the language from the transcript and responds in the same language. User selects language for STT accuracy, but the AI response language is auto-detected.
 
 ---
 
@@ -408,7 +411,7 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 - [x] Database: Added balance column to users, created payment_transactions table
 - [x] Deploy + test end-to-end: balance deducts, fraud warnings, insufficient funds rejected
 
-### Phase 10: Polish + Completion ✅ DONE (26 Apr 2026, 2:00 AM)
+### Phase 10: Polish + Completion ✅ DONE (26 Apr 2026, 2:35 AM)
 - [x] TNGHome: fetch real balance from API (not hardcoded)
 - [x] TNGHome: fetch real transactions from API (not hardcoded)
 - [x] TNGHome: balance refreshes on focus/visibility change
@@ -418,9 +421,15 @@ Everything runs in the cloud. Zero local dependency. Judges can open the URL on 
 - [x] Security: biometric requires tap to verify (human-in-the-loop)
 - [x] Security: 3 methods — Face ID, Touch ID, Security PIN
 - [x] Language: STT/TTS uses selected language (EN, BM, ZH, TA)
+- [x] Language: auto-detection — AI detects language from transcript, responds in same language
+- [x] Language: added Cantonese (粵語) support
+- [x] AI: upgraded to Claude Sonnet 4.6 (global.anthropic.claude-sonnet-4-6)
+- [x] AI: bill_payment added to quick actions + enum
+- [x] AI: prompt rules for language detection + respond in user's language
 - [x] ScanPage: QR scan mock with merchant + amount + real payment
 - [x] BillPage: proper form UI with biller/account/amount
-- [x] Reset balance endpoint for demo day
+- [x] Account switcher: 5 demo users with different balances + languages
+- [x] Reset balance endpoint for demo day (resets all accounts)
 - [x] GOfinance: shows real balance from API
 - [x] Services: SVG icons replace all emojis
 - [x] Push to GitHub (https://github.com/acruxn/MTsssss.git)

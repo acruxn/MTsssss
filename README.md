@@ -56,17 +56,17 @@ Browser (HTTPS)                    AWS Singapore              Alibaba Cloud KL
 
 | Layer | Technology |
 |-------|-----------|
-| **AI Agent** | Bedrock Claude Sonnet 4 (tool_use for structured JSON) |
+| **AI Agent** | Bedrock Claude Sonnet 4.6 (tool_use for structured JSON) |
 | **Backend** | FastAPI + Mangum on AWS Lambda (Python 3.12) |
 | **Database** | Alibaba Cloud RDS MySQL 8.0 (Kuala Lumpur) |
 | **Frontend** | React 19 + TypeScript + Tailwind 4 + Vite 8 |
 | **Hosting** | AWS Amplify (HTTPS) + API Gateway HTTP API |
-| **Voice** | Web Speech API (browser-native STT/TTS, 4 languages) |
+| **Voice** | Web Speech API (browser-native STT/TTS, 5 languages + auto-detect) |
 | **IaC** | Terraform (AWS + Alibaba Cloud providers) |
 
 ## Key Features
 
-- **Voice-first**: Speak in BM, EN, ZH, TA — AI understands intent and extracts parameters
+- **Voice-first**: Speak in BM, EN, ZH, Cantonese, TA — AI auto-detects language and responds in kind
 - **Speech-to-speech**: AI speaks back confirmation via TTS after processing
 - **Real transactions**: Balance deducts, transaction history persists in Alibaba Cloud RDS
 - **Fraud detection**: Flags large amounts (>RM500), high-balance-usage (>80%), first-time recipients
@@ -74,6 +74,8 @@ Browser (HTTPS)                    AWS Singapore              Alibaba Cloud KL
 - **Proper form UIs**: Transfer, Fuel, Reload, Bills, Scan — each with validation and real API calls
 - **Action flow simulator**: Voice commands auto-fill screens with typewriter animation
 - **14 TNG actions**: Covers payments, transfers, bills, fuel, GO+, GOpinjam, and more
+- **Account switcher**: 5 demo users with different balances and languages for demo day
+- **Auto language detection**: AI detects language from transcript, responds in same language
 - **TNG-branded UI**: Pixel-matched home, GOfinance, eShop pages with real APK assets
 - **Fully deployed**: No local dependencies — judges open the URL on their phone
 
