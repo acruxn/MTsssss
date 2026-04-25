@@ -4,6 +4,7 @@ import {
   createSession,
   extractFields,
   completeSession,
+  detectIntent,
   type FormTemplate,
   type VoiceSession,
   type ExtractedFields,
@@ -17,7 +18,7 @@ interface SpeechRecognitionEvent {
   resultIndex: number;
 }
 
-type Phase = "idle" | "listening" | "extracting" | "confirm" | "done";
+type Phase = "idle" | "listening" | "extracting" | "confirm" | "done" | "home-listening" | "home-extracting";
 
 const LANG_MAP: Record<string, string> = {
   en: "en-US",
@@ -34,6 +35,7 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
   const [extracted, setExtracted] = useState<Record<string, string | null>>({});
   const [confidence, setConfidence] = useState(0);
   const [error, setError] = useState("");
+  const [matchedName, setMatchedName] = useState("");
   const recognitionRef = useRef<ReturnType<typeof Object> | null>(null);
   const listeningRef = useRef(false);
 
@@ -172,17 +174,54 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
     setExtracted({});
     setConfidence(0);
     setError("");
+    setMatchedName("");
+    if (!templateId) setTemplate(null);
   }
 
-  if (!templateId) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-gray-400 mb-4">No template selected.</p>
-        <button onClick={() => onNavigate("/templates")} className="text-blue-400 hover:underline">
-          Browse Templates
-        </button>
-      </div>
-    );
+  function handleHomeStart() {
+    setError("");
+    setPhase("home-listening");
+    startRecognition();
+  }
+
+  function handleHomeCancel() {
+    stopSpeaking();
+    stopRecognition();
+    setTranscript("");
+    setPhase("idle");
+  }
+
+  async function handleHomeDone() {
+    stopRecognition();
+    const text = transcript.trim();
+    if (!text) return;
+
+    setPhase("home-extracting");
+    setError("");
+
+    try {
+      const result = await detectIntent(text, language);
+      if (result.template_id) {
+        const tmpl = await getTemplate(result.template_id);
+        setTemplate(tmpl);
+        setMatchedName(result.template_name);
+        const fields: Record<string, string | null> = {};
+        for (const [k, v] of Object.entries(result.fields)) {
+          fields[k] = v != null ? String(v) : null;
+        }
+        setExtracted(fields);
+        setConfidence(result.confidence);
+        setPhase("confirm");
+      } else {
+        setError("Couldn't identify a form. Try being more specific.");
+        setPhase("home-listening");
+        startRecognition();
+      }
+    } catch {
+      setError("Detection failed. Please try again.");
+      setPhase("home-listening");
+      startRecognition();
+    }
   }
 
   const MicIcon = (
@@ -217,8 +256,67 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
 
       <style>{fadeInStyle}</style>
 
-      {/* IDLE */}
-      {phase === "idle" && (
+      {/* HOME FLOW — no template pre-selected */}
+      {!templateId && phase === "idle" && (
+        <div style={{ animation: "fadeIn 0.3s ease-in" }}>
+          <div className="flex flex-col items-center gap-4 py-12">
+            <h2 className="text-xl font-semibold text-center">🎙️ What would you like to do?</h2>
+            <p className="text-gray-400 text-sm text-center">Speak naturally — I'll find the right form for you</p>
+            <button
+              onClick={handleHomeStart}
+              className="mic-pulse w-32 h-32 rounded-full bg-blue-600 hover:bg-blue-500 transition-all flex items-center justify-center shadow-lg shadow-blue-600/30 mt-4"
+            >
+              {MicIcon}
+            </button>
+            <p className="text-xs text-gray-600 mt-2">Or <button onClick={() => onNavigate("/templates")} className="text-blue-400 hover:underline">browse templates</button></p>
+          </div>
+        </div>
+      )}
+
+      {!templateId && phase === "home-listening" && (
+        <div style={{ animation: "fadeIn 0.3s ease-in" }}>
+          <div className="space-y-6">
+            <div className="flex items-center justify-center gap-1 h-16">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="w-2 rounded-full bg-blue-500 animate-pulse" style={{ height: `${20 + Math.random() * 40}px`, animationDelay: `${i * 0.15}s` }} />
+              ))}
+            </div>
+            <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 min-h-[80px]">
+              <p className="text-xs text-gray-500 mb-1">Live Transcription</p>
+              <p className="text-lg">{transcript || <span className="text-gray-600">Listening...</span>}</p>
+            </div>
+            <div className="mt-2">
+              <input
+                type="text"
+                placeholder="Or type here instead..."
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
+                    setTranscript((e.target as HTMLInputElement).value.trim());
+                  }
+                }}
+              />
+              <p className="text-xs text-gray-600 mt-1">Press Enter to set transcript</p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={handleHomeDone} disabled={!transcript.trim()} className="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 text-white rounded-lg py-3 font-medium transition-colors">✓ Done Speaking</button>
+              <button onClick={handleHomeCancel} className="bg-red-700 hover:bg-red-600 text-white rounded-lg py-3 px-6 font-medium transition-colors">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!templateId && phase === "home-extracting" && (
+        <div style={{ animation: "fadeIn 0.3s ease-in" }}>
+          <div className="flex flex-col items-center gap-4 py-16">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-400">Detecting intent & extracting fields...</p>
+          </div>
+        </div>
+      )}
+
+      {/* TEMPLATE FLOW — idle */}
+      {templateId && phase === "idle" && (
         <div className="animate-fadeIn" style={{ animation: "fadeIn 0.3s ease-in" }}>
         <div className="space-y-6">
           <FieldList />
@@ -237,7 +335,7 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
       )}
 
       {/* LISTENING */}
-      {phase === "listening" && (
+      {templateId && phase === "listening" && (
         <div className="animate-fadeIn" style={{ animation: "fadeIn 0.3s ease-in" }}>
         <div className="space-y-6">
           <FieldList />
@@ -287,7 +385,7 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
       )}
 
       {/* EXTRACTING */}
-      {phase === "extracting" && (
+      {templateId && phase === "extracting" && (
         <div className="animate-fadeIn" style={{ animation: "fadeIn 0.3s ease-in" }}>
         <div className="flex flex-col items-center gap-4 py-16">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -300,6 +398,11 @@ export default function VoiceAssistant({ onNavigate, language = "en" }: { onNavi
       {phase === "confirm" && (
         <div className="animate-fadeIn" style={{ animation: "fadeIn 0.3s ease-in" }}>
         <div className="space-y-6">
+          {matchedName && (
+            <div className="bg-blue-900/30 border border-blue-800 rounded-lg p-3 text-sm text-blue-300">
+              Matched: <span className="font-semibold">{matchedName}</span>
+            </div>
+          )}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">📋 Extracted Fields</h2>

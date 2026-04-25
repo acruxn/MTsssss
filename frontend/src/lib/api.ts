@@ -73,3 +73,16 @@ export const completeSession = (sessionId: number | string) =>
   request<VoiceSession>(`/voice/sessions/${sessionId}/complete`, { method: "POST" });
 export const getSessions = (limit: number = 20) =>
   request<VoiceSession[]>(`/voice/sessions?limit=${limit}`);
+
+export interface DetectIntentResult {
+  template_id: number | null;
+  template_name: string;
+  fields: Record<string, unknown>;
+  confidence: number;
+}
+
+export const detectIntent = (transcript: string, language: string) =>
+  request<DetectIntentResult>("/voice/detect-intent", {
+    method: "POST",
+    body: JSON.stringify({ transcript, language }),
+  });
