@@ -223,6 +223,9 @@ class AIService:
             f"10. If the user's request is vague, greeting, or you need more info, use action_type='chat' and write a helpful chat_response asking what they need.\n"
             f"11. Examples of 'chat': 'hello', 'I need help', 'what can you do', 'hi', 'tolong saya'\n"
             f"12. For 'chat', set confidence to 0.0 and fields to empty {{}}\n"
+            f"13. IMPORTANT: Look at the FULL conversation history. If the user has already stated what they want (e.g. 'loan', 'transfer', 'fuel'), classify it as the correct action — do NOT keep asking. Extract whatever fields you can from the conversation.\n"
+            f"14. If the user asks 'how do I do this' or 'help me with that' after mentioning an action, classify it as that action — they want you to DO it, not explain it.\n"
+            f"15. Prefer action over chat. Only use 'chat' if you truly cannot determine what action the user wants after reading the full history.\n"
             f"Call the detect_intent_tool with your analysis."
         )
 
