@@ -176,6 +176,40 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
     setMessages(prev => [...prev, { role: "user", content: text }]);
     const lang = detectedLang || language;
 
+    // Loan page voice commands — dispatch events directly instead of detect-intent
+    if (window.location.pathname === "/loan") {
+      const lower = text.toLowerCase();
+      const confirmWords = ["confirm", "yes", "sahkan", "ok", "okay", "betul", "确认", "是"];
+      const scoreWords = ["score", "credit", "skor", "check score"];
+      const submitWords = ["submit", "apply", "hantar", "mohon", "submit loan", "apply loan"];
+
+      if (confirmWords.some(w => lower.includes(w)) && !submitWords.some(w => lower.includes(w))) {
+        window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "confirm_extraction" } }));
+        const msg = "Confirming your bank statement... ✅";
+        setMessages(prev => [...prev, { role: "assistant", content: msg }]);
+        speak(msg, lang);
+        setProcessing(false);
+        return;
+      }
+      if (scoreWords.some(w => lower.includes(w))) {
+        window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "check_score" } }));
+        const msg = "Refreshing your credit score... 📊";
+        setMessages(prev => [...prev, { role: "assistant", content: msg }]);
+        speak(msg, lang);
+        setProcessing(false);
+        return;
+      }
+      if (submitWords.some(w => lower.includes(w))) {
+        window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "submit_loan" } }));
+        setTimeout(() => window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "refresh_loans" } })), 2000);
+        const msg = "Submitting your loan application... 🏦";
+        setMessages(prev => [...prev, { role: "assistant", content: msg }]);
+        speak(msg, lang);
+        setProcessing(false);
+        return;
+      }
+    }
+
     try {
       const historyCtx = messages.map(m => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`).join("\n") + "\nUser: " + text;
       const result = await detectIntent(historyCtx, lang);

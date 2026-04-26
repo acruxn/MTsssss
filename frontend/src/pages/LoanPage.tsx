@@ -114,6 +114,25 @@ export default function LoanPage({ onNavigate }: { onNavigate: (path: string) =>
     init();
   }, [userId, fetchCreditScore, fetchLoans]);
 
+  // Listen for voice assistant commands
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.type === "confirm_extraction") handleConfirm();
+      else if (detail.type === "check_score") fetchCreditScore();
+      else if (detail.type === "fill_loan") {
+        if (detail.amount) setLoanAmount(String(detail.amount));
+        if (detail.tenure) setLoanTenure(Number(detail.tenure));
+      }
+      else if (detail.type === "submit_loan") {
+        handleApplyLoan();
+      }
+      else if (detail.type === "refresh_loans") fetchLoans();
+    };
+    window.addEventListener("loan-voice-action", handler);
+    return () => window.removeEventListener("loan-voice-action", handler);
+  });
+
   // Upload bank statement
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
