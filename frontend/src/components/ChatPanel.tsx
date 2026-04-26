@@ -29,6 +29,7 @@ const ACTION_META: Record<string, string> = {
 
 export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatPanelProps) {
   const [panelState, setPanelState] = useState<"expanded" | "pill" | "hidden">("hidden");
+  const [loanSessionId] = useState(() => "loan-" + Math.random().toString(36).slice(2, 10));
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [recording, setRecording] = useState(false);
@@ -175,6 +176,48 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
     const lang = detectedLang || language;
 
     try {
+      // On loan page, use our VoiceChat Lambda for loan-specific actions
+      if (window.location.pathname === "/loan") {
+        try {
+          const resp = await fetch("https://ku63fvg2sc.execute-api.ap-southeast-1.amazonaws.com/voice/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text, sessionId: loanSessionId, userId: "USR002", context: "credit_loan" }),
+          });
+          const data = await resp.json();
+          const responseText = (data.response || "").replace(/\s*ACTION:\w+\s*/g, "").trim();
+          if (responseText) {
+            setMessages(prev => [...prev, { role: "assistant", content: responseText }]);
+            speak(responseText, lang);
+          }
+          const action = data.action;
+          if (action?.type === "CONFIRM_EXTRACTION") {
+            window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "confirm_extraction" } }));
+          } else if (action?.type === "CREDIT_SCORE") {
+            window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "check_score" } }));
+          } else if (action?.type === "FILL_LOAN_FORM") {
+            window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "fill_loan", amount: action.amount, tenure: action.tenure } }));
+          } else if (action?.type === "SUBMIT_LOAN") {
+            window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "submit_loan" } }));
+            setTimeout(() => window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "refresh_loans" } })), 2000);
+          } else {
+            const rLower = (responseText || "").toLowerCase();
+            if (rLower.includes("submitted") || rLower.includes("pending")) {
+              window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "refresh_loans" } }));
+            }
+            if (rLower.includes("filled") || rLower.includes("application for")) {
+              const amtMatch = rLower.match(/rm\s*(\d+)/);
+              const tenMatch = rLower.match(/(\d+)\s*month/);
+              if (amtMatch) {
+                window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "fill_loan", amount: amtMatch[1], tenure: tenMatch ? tenMatch[1] : "6" } }));
+              }
+            }
+          }
+          setProcessing(false);
+          return;
+        } catch { /* fall through to normal detect_intent */ }
+      }
+
       const historyCtx = messages.map(m => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`).join("\n") + "\nUser: " + text;
       const result = await detectIntent(historyCtx, lang);
       const aType = result.action_type || "unknown";

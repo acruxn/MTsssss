@@ -56,7 +56,7 @@ function ScoreGauge({ score }: { score: number }) {
 }
 
 export default function LoanPage({ onNavigate }: { onNavigate: (path: string) => void }) {
-  const [userId] = useState(1); // Main project user ID
+  const [userId] = useState("USR002"); // Ahmad bin Hassan
   const [creditScore, setCreditScore] = useState<CreditScore | null>(null);
   const [scoreLoading, setScoreLoading] = useState(true);
   const [loans, setLoans] = useState<LoanRecord[]>([]);
@@ -76,6 +76,7 @@ export default function LoanPage({ onNavigate }: { onNavigate: (path: string) =>
   const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastFilledRef = useRef<{ amount: string; tenure: number }>({ amount: "", tenure: 6 });
 
   // API helpers
   const api = async (path: string, body: Record<string, unknown>) => {
@@ -85,14 +86,14 @@ export default function LoanPage({ onNavigate }: { onNavigate: (path: string) =>
 
   const fetchCreditScore = useCallback(async () => {
     setScoreLoading(true);
-    try { setCreditScore(await api("/credit/score", { userId: `USR00${userId}` })); }
+    try { setCreditScore(await api("/credit/score", { userId: `${userId}` })); }
     catch { /* ignore */ }
     finally { setScoreLoading(false); }
   }, [userId]);
 
   const fetchLoans = useCallback(async () => {
     try {
-      const data = await api("/loan/apply", { userId: `USR00${userId}`, action: "status" });
+      const data = await api("/loan/apply", { userId: `${userId}`, action: "status" });
       setLoans(data.loans || []);
       setLoanSummary({ totalMonthlyDue: data.totalMonthlyDue || 0, nextDueDate: data.nextDueDate });
     } catch { /* ignore */ }
@@ -100,12 +101,11 @@ export default function LoanPage({ onNavigate }: { onNavigate: (path: string) =>
 
   useEffect(() => {
     const init = async () => {
-      await api("/loan/apply", { userId: `USR00${userId}`, action: "approve" });
+      await api("/loan/apply", { userId: `${userId}`, action: "approve" });
       await fetchCreditScore();
       await fetchLoans();
     };
     setLoanResult(null); setExtraction(null);
-    // Read prefilled params from URL (from ChatPanel voice action)
     const params = new URLSearchParams(window.location.search);
     if (params.get("amount")) setLoanAmount(params.get("amount") || "");
     else setLoanAmount("");
@@ -114,19 +114,79 @@ export default function LoanPage({ onNavigate }: { onNavigate: (path: string) =>
     init();
   }, [userId, fetchCreditScore, fetchLoans]);
 
+  // Listen for voice actions from ChatPanel
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      console.log("[LoanPage] voice action received:", detail.type, detail);
+      if (detail.type === "confirm_extraction") {
+        // Directly call the confirm API
+        if (extraction) {
+          api("/extraction/confirm", { userId, extractionId: extraction.documentId, s3Key: extraction.s3Key, extraction: extraction.extraction })
+            .then(() => {
+              setExtraction(null);
+              setToast({ type: "success", message: "Bank statement confirmed! Refresh to update score." });
+              setTimeout(() => setToast(null), 6000);
+            });
+        }
+      } else if (detail.type === "check_score") {
+        api("/credit/score", { userId }).then(data => setCreditScore(data));
+      } else if (detail.type === "fill_loan") {
+        const amt = String(detail.amount || "");
+        const ten = Number(detail.tenure) || 6;
+        setLoanAmount(amt);
+        setLoanTenure(ten);
+        lastFilledRef.current = { amount: amt, tenure: ten };
+      } else if (detail.type === "submit_loan") {
+        const { amount: refAmt, tenure: refTen } = lastFilledRef.current;
+        const amt = parseFloat(refAmt || loanAmount || "0");
+        const ten = refTen || loanTenure || 6;
+        console.log("[LoanPage] submit_loan:", { amt, ten, refAmt, refTen, loanAmount, loanTenure });
+        if (amt > 0 && ten >= 3 && ten <= 24) {
+          api("/loan/apply", { userId, amount: amt, tenureMonths: ten })
+            .then(result => {
+              console.log("[LoanPage] loan apply result:", result);
+              setLoanResult(result);
+              setLoanAmount("");
+              setLoanTenure(6);
+              lastFilledRef.current = { amount: "", tenure: 6 };
+              api("/loan/apply", { userId, action: "status" }).then(data => {
+                setLoans(data.loans || []);
+                setLoanSummary({ totalMonthlyDue: data.totalMonthlyDue || 0, nextDueDate: data.nextDueDate });
+              });
+            })
+            .catch(err => console.error("[LoanPage] loan apply error:", err));
+        } else {
+          console.warn("[LoanPage] submit_loan skipped: invalid amt/ten", { amt, ten });
+        }
+      } else if (detail.type === "refresh_loans") {
+        setLoanAmount("");
+        setLoanTenure(6);
+        lastFilledRef.current = { amount: "", tenure: 6 };
+        api("/loan/apply", { userId, action: "status" }).then(data => {
+          setLoans(data.loans || []);
+          setLoanSummary({ totalMonthlyDue: data.totalMonthlyDue || 0, nextDueDate: data.nextDueDate });
+        });
+        api("/credit/score", { userId }).then(data => setCreditScore(data));
+      }
+    };
+    window.addEventListener("loan-voice-action", handler);
+    return () => window.removeEventListener("loan-voice-action", handler);
+  });
+
   // Upload bank statement
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true); setExtraction(null); setLoanResult(null);
     try {
-      const linkData = await api("/upload/link", { userId: `USR00${userId}`, files: [{ fileName: file.name, contentType: file.type || "image/png" }] });
+      const linkData = await api("/upload/link", { userId: `${userId}`, files: [{ fileName: file.name, contentType: file.type || "image/png" }] });
       const { documentId, uploadLinks } = linkData;
       await fetch(uploadLinks[0].uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
       setUploading(false); setExtracting(true);
       const [urlResp, extResp] = await Promise.all([
         api("/download/link", { s3Key: uploadLinks[0].s3Key }),
-        api("/extraction/extract", { userId: `USR00${userId}`, documentId, s3Key: uploadLinks[0].s3Key }),
+        api("/extraction/extract", { userId: `${userId}`, documentId, s3Key: uploadLinks[0].s3Key }),
       ]);
       setExtraction({ imageUrl: urlResp.downloadUrl, extraction: extResp.extraction, documentId, s3Key: uploadLinks[0].s3Key });
     } catch (err) {
@@ -139,13 +199,10 @@ export default function LoanPage({ onNavigate }: { onNavigate: (path: string) =>
     if (!extraction) return;
     setConfirming(true);
     try {
-      await api("/extraction/confirm", { userId: `USR00${userId}`, extractionId: extraction.documentId, s3Key: extraction.s3Key, extraction: extraction.extraction });
+      await api("/extraction/confirm", { userId: `${userId}`, extractionId: extraction.documentId, s3Key: extraction.s3Key, extraction: extraction.extraction });
       setExtraction(null);
-      setToast({ type: "success", message: "✅ Bank statement confirmed! Updating credit score..." });
-      // Auto-refresh credit score after confirmation
-      await fetchCreditScore();
-      setToast({ type: "success", message: "✅ Bank statement confirmed! Credit score updated." });
-    } catch { setToast({ type: "error", message: "Confirmation failed. Please try again." }); }
+      setToast({ type: "success", message: "Bank statement confirmed! Refresh to update credit score." });
+    } catch { setToast({ type: "error", message: "Confirmation failed." }); }
     finally { setConfirming(false); setTimeout(() => setToast(null), 6000); }
   };
 
@@ -155,7 +212,7 @@ export default function LoanPage({ onNavigate }: { onNavigate: (path: string) =>
     if (!amt || amt <= 0) return;
     setApplyingLoan(true); setLoanResult(null);
     try {
-      const result = await api("/loan/apply", { userId: `USR00${userId}`, amount: amt, tenureMonths: loanTenure });
+      const result = await api("/loan/apply", { userId: `${userId}`, amount: amt, tenureMonths: loanTenure });
       setLoanResult(result);
       await fetchLoans();
     } catch { setToast({ type: "error", message: "Loan application failed." }); setTimeout(() => setToast(null), 4000); }
