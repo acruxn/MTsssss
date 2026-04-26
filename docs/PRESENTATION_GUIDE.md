@@ -30,8 +30,8 @@ FormBuddy is an AI assistant that lives INSIDE the TNG eWallet app. It's not a s
 - They abandon digital payments or rely on others (security risk)
 
 ### Tech stack (for technical judges)
-- **AI**: AWS Bedrock Claude Sonnet 4.6 with tool_use for structured JSON
-- **Backend**: FastAPI on AWS Lambda (serverless, zero-ops)
+- **AI**: AWS Bedrock Claude Sonnet 4.6 (voice intent), Amazon Nova Lite (document extraction + bounding boxes)
+- **Backend**: FastAPI on AWS Lambda (serverless, zero-ops) + dedicated Lambdas for loan/extraction pipeline
 - **Database**: Alibaba Cloud RDS MySQL in Kuala Lumpur (data stays in Malaysia)
 - **Frontend**: React + TypeScript on AWS Amplify
 - **Voice**: Browser Web Speech API (free, zero latency)
@@ -94,13 +94,35 @@ FormBuddy is an AI assistant that lives INSIDE the TNG eWallet app. It's not a s
 
 > "5 languages. 14 actions. 5 demo users. Real transactions. Real fraud detection."
 
-### 3:10–3:40 — Architecture
-> "Data stays in Malaysia on Alibaba Cloud RDS — same database engine TNG uses in production. Compute and AI run on AWS Singapore — Bedrock Claude Sonnet 4.6 for intent detection. Terraform manages both clouds."
+### 3:10–3:40 — Demo 5: Bank Statement Extraction + Credit Score
+1. Navigate to GOfinance → scroll to CashLoan → tap "Apply now" (or say "apply loan" via mic)
+2. Show the GOpinjam Loan page with current credit score (~660)
+3. Tap "Choose bank statement" → upload `ahmad_cimb_mar2026.png`
+4. Wait for AI extraction (Bedrock Nova Lite) → show extracted fields: Bank Name, Account Holder, Total Deposit, Total Withdrawal
+5. Say via mic: **"confirm my bank statement"** (or tap the green Confirm button)
+6. Extraction panel closes → toast: "Bank statement confirmed"
+7. Credit score jumps from ~660 → ~760 (Excellent)
+
+> "Uncle uploaded his bank statement. The AI extracted all the fields using Amazon Nova — no manual data entry. His credit score jumped 100 points. Now he qualifies for a loan he couldn't get before."
+
+### 3:40–4:10 — Demo 6: Voice-Assisted Loan Application
+1. Tap the mic button on the loan page
+2. Say: **"apply loan 500 for 6 months"**
+3. AI fills the loan form: Amount = 500, Tenure = 6 months, Monthly repayment shown
+4. Say: **"confirm"**
+5. AI submits the loan → "Loan Pending Approval" toast appears
+6. Loan History updates with new pending loan
+7. Refresh the page → pending loan becomes Active, fields clear, due dates show
+
+> "Uncle applied for a loan by voice. He said the amount and tenure, the AI filled the form, he confirmed, and it's done. No typing, no confusion. The loan shows up in his history with the repayment schedule."
+
+### 4:10–4:30 — Architecture
+> "Data stays in Malaysia on Alibaba Cloud RDS — same database engine TNG uses in production. Compute and AI run on AWS — Bedrock Claude for voice understanding, Nova Lite for document extraction, Lambda for serverless compute. Terraform manages both clouds."
 
 Show the architecture if you have a slide, or just say it.
 
-### 3:40–4:00 — Close
-> "1.2 million Malaysians are excluded from digital finance because they can't fill forms. FormBuddy fixes that. One voice at a time."
+### 4:30–4:50 — Close
+> "1.2 million Malaysians are excluded from digital finance because they can't fill forms. FormBuddy fixes that — voice for transactions, AI for document extraction, and smart credit scoring to unlock loans. One voice at a time."
 
 ---
 
@@ -130,6 +152,15 @@ Show the architecture if you have a slide, or just say it.
 ### "How would this work in production?"
 > "The architecture is production-ready. Replace RDS MySQL with OceanBase (same driver, zero code change). Add Bedrock AgentCore for session memory. Add WhatsApp integration for users without smartphones. The core pipeline — voice → AI → action — stays the same."
 
+### "How does the bank statement extraction work?"
+> "We use Amazon Nova Lite on Bedrock. It reads the document image, extracts structured fields like account holder, balances, and transactions, and returns bounding box coordinates for each field. Two-pass approach: first pass extracts data, second pass detects field locations. All AI-powered, no OCR templates."
+
+### "How is the credit score calculated?"
+> "Multi-factor scoring from 300-850. Income stability, spending ratio, account age, transaction activity, outstanding debt, and bank verification bonus. Each confirmed bank statement adds to the score. The data comes from both TNG transaction history and uploaded bank statements — all stored in Alibaba Cloud RDS."
+
+### "Can the voice assistant actually submit a loan?"
+> "Yes. The AI uses Bedrock Claude with tool_use — it has tools for checking credit score, filling the loan form, and submitting the application. The user confirms each step by voice. The loan goes to pending status first, then gets approved on the next page load — simulating admin approval."
+
 ---
 
 ## THINGS THAT CAN GO WRONG (and recovery)
@@ -149,11 +180,13 @@ Show the architecture if you have a slide, or just say it.
 
 - **1.2 million** unbanked Malaysians (World Bank 2021)
 - **5** languages supported
-- **14** TNG actions by voice
+- **14** TNG actions by voice + loan application + bank statement extraction
 - **5** demo users with different balances
 - **3 seconds** speech to form pre-fill
 - **2 clouds** — Alibaba (data, Malaysia) + AWS (compute + AI, Singapore)
-- **Claude Sonnet 4.6** — latest model, tool_use for structured JSON
+- **Claude Sonnet 4.6** — voice intent detection with tool_use
+- **Nova Lite** — document extraction with bounding boxes
+- **660 → 760** credit score jump from one bank statement upload
 - **Zero local dependency** — judges can open the URL on their phone
 
 ---
