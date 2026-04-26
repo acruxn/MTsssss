@@ -1,10 +1,22 @@
+<div align="center">
+
+<img src="frontend/public/tng/app-icon-round.png" width="80" />
+
 # FormBuddy
 
-Voice-powered AI assistant for TNG eWallet.
+**Voice-powered AI assistant for TNG eWallet**
 
-Built for [TNG Digital FinHack 2026](https://tngdigitalfinhack.com) -- Track 1: Financial Inclusion.
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Amplify-blue?style=flat-square)](https://main.d3is7aj4mo28yv.amplifyapp.com)
+[![API](https://img.shields.io/badge/API-Lambda-orange?style=flat-square)](https://w6qtfxl2va.execute-api.ap-southeast-1.amazonaws.com/health)
+[![Track](https://img.shields.io/badge/Track_1-Financial_Inclusion-green?style=flat-square)](#)
+[![Stack](https://img.shields.io/badge/Bedrock-Sonnet_4.6-purple?style=flat-square)](#)
+[![DB](https://img.shields.io/badge/Alibaba_Cloud-RDS_MySQL-red?style=flat-square)](#)
 
-[Live Demo](https://main.d3is7aj4mo28yv.amplifyapp.com) / [API](https://w6qtfxl2va.execute-api.ap-southeast-1.amazonaws.com/health) / [Master Plan](docs/MASTER_PLAN.md) / [Presentation Guide](docs/PRESENTATION_GUIDE.md)
+[Live Demo](https://main.d3is7aj4mo28yv.amplifyapp.com) · [Master Plan](docs/MASTER_PLAN.md) · [Presentation Guide](docs/PRESENTATION_GUIDE.md)
+
+*TNG Digital FinHack 2026*
+
+</div>
 
 ---
 
@@ -14,7 +26,7 @@ Built for [TNG Digital FinHack 2026](https://tngdigitalfinhack.com) -- Track 1: 
 
 FormBuddy is an AI assistant that lives inside TNG eWallet as a floating chat panel. Users tap the mic, speak in any language, and the assistant handles the rest -- understands intent, confirms the action, verifies identity, executes the transaction. The TNG app stays visible underneath the whole time.
 
-It works in English, Malay, Mandarin, Cantonese, and Tamil. It handles transfers, fuel payments, bills, loans, and 10 other action types. Every transaction deducts real balance from a real database.
+Works in English, Malay, Mandarin, Cantonese, and Tamil. Handles transfers, fuel, bills, loans, and 10 other action types. Every transaction deducts real balance from a real database.
 
 ```
 User:  "Nak pump minyak RON95 lima puluh"
@@ -28,65 +40,134 @@ Manual form UIs exist for every action too. Same backend, same balance, same fra
 
 ---
 
-## How it works
+## Architecture
 
+```mermaid
+graph TB
+    subgraph Browser["Browser (HTTPS)"]
+        FE["React 19 + Tailwind 4 + Vite 8"]
+        WSA["Web Speech API<br/><i>live subtitles</i>"]
+        MR["MediaRecorder<br/><i>audio capture</i>"]
+    end
+
+    subgraph AWS["AWS — Singapore"]
+        AG["API Gateway HTTP"]
+        LM["Lambda<br/>FastAPI + Mangum"]
+        BK["Bedrock Claude Sonnet 4.6<br/><i>tool_use · 15 rules</i>"]
+        TR["AWS Transcribe<br/><i>auto-language STT</i>"]
+        AMP["Amplify<br/><i>HTTPS hosting</i>"]
+        subgraph Loan["Loan / BDA (teammate)"]
+            L1["16 Lambdas"]
+            L2["Bedrock Nova<br/><i>bank statement extraction</i>"]
+        end
+    end
+
+    subgraph ALI["Alibaba Cloud — Kuala Lumpur"]
+        RDS["RDS MySQL 8.0<br/><i>OceanBase-compatible</i>"]
+        DB1[("users · transactions<br/>form_templates<br/>voice_sessions")]
+    end
+
+    FE -->|REST| AG
+    MR -->|audio blob| TR
+    AG --> LM
+    LM --> BK
+    LM --> RDS
+    RDS --- DB1
+    FE -->|loan API| L1
+    L1 --> L2
+    AMP -.->|hosts| FE
+
+    style Browser fill:#f8fafc,stroke:#e2e8f0
+    style AWS fill:#fff7ed,stroke:#fed7aa
+    style ALI fill:#eff6ff,stroke:#bfdbfe
+    style Loan fill:#fef3c7,stroke:#fde68a
 ```
-Browser                         AWS (Singapore)                Alibaba Cloud (KL)
----------                       ---------------                ------------------
-React + Tailwind                API Gateway → Lambda           RDS MySQL 8.0
-Web Speech API (subtitles)      FastAPI + Mangum               users, transactions
-MediaRecorder → Transcribe      Bedrock Sonnet 4.6             form_templates
-AWS Amplify (HTTPS)             (tool_use, 15 rules)           voice_sessions
-                                Fraud detection
-                                AWS Transcribe (STT)
-```
 
-Data stays in Malaysia on Alibaba Cloud RDS -- same database engine TNG uses in production (OceanBase-compatible). Compute and AI run on AWS Singapore. Terraform manages both.
-
-The voice pipeline: browser records audio via MediaRecorder, Web Speech API provides live subtitles while recording. On stop, if Web Speech got a transcript (works well for English/Malay), it goes straight to intent detection. If not (Chinese/Tamil), audio is sent to AWS Transcribe for server-side auto-language detection. Either way, the transcript hits Bedrock Claude Sonnet 4.6 with tool_use for structured JSON extraction.
-
-The chat panel handles the full lifecycle: multi-turn conversation, confirmation with biometric verification (Touch ID mock), real API call, and receipt with updated balance -- all without leaving the chat.
+Data stays in Malaysia on Alibaba Cloud RDS. Compute and AI run on AWS Singapore. Terraform manages both.
 
 ---
 
-## What it can do
+## Voice Pipeline
 
-**Payments:** Fund Transfer, Fuel, Bills, Scan & Pay, Prepaid Reload, Toll/RFID, Parking
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant C as ChatPanel
+    participant W as Web Speech API
+    participant T as AWS Transcribe
+    participant B as Bedrock Sonnet 4.6
+    participant A as Backend API
 
-**Financial:** Check Balance, GO+ Investment, GOpinjam Loan, Insurance
+    U->>C: Taps mic, speaks
+    par Live subtitles
+        C->>W: Stream audio
+        W-->>C: Interim transcript
+    and Audio capture
+        C->>C: MediaRecorder
+    end
+    U->>C: Taps stop
 
-**Lifestyle:** Buy Tickets, Food Delivery, Donations
+    alt Web Speech got text (EN/BM)
+        C->>B: detect-intent (fast path)
+    else Empty transcript (ZH/TA)
+        C->>T: Send audio blob
+        T-->>C: Transcript + language
+        C->>B: detect-intent
+    end
 
-The loan flow integrates with a separate BDA backend (teammate's 16 Lambdas) for credit scoring, bank statement extraction via Bedrock Nova, and loan disbursement. Voice commands on the loan page trigger actions directly -- "confirm", "submit", "check score" -- without going through intent detection.
+    B-->>C: action_type + fields + confirmation
+    C-->>U: "Send RM100 to Ahmad?" [Confirm]
+    U->>C: Taps Confirm
+    C-->>U: Touch ID overlay
+    U->>C: Taps verify
+    C->>A: POST /user/transfer
+    A-->>C: balance, txn_id, warnings
+    C-->>U: "Done! Balance: RM1,134.56"
+```
+
+---
+
+## Supported Actions
+
+| Category | Actions |
+|----------|---------|
+| **Payments** | Fund Transfer · Fuel · Bills · Scan & Pay · Prepaid Reload |
+| **Transport** | Toll / RFID · Parking |
+| **Financial** | Check Balance · GO+ Investment · GOpinjam Loan · Insurance |
+| **Lifestyle** | Buy Tickets · Food Delivery · Donations |
 
 ---
 
 ## Stack
 
-| | What | Where |
-|-|------|-------|
-| AI | Bedrock Claude Sonnet 4.6 (tool_use) | AWS |
-| STT | AWS Transcribe (auto-language) + Web Speech API | AWS + Browser |
+| Layer | Technology | Cloud |
+|-------|-----------|-------|
+| AI (intent) | Bedrock Claude Sonnet 4.6, tool_use | AWS |
+| AI (extraction) | Bedrock Nova | AWS |
+| STT | AWS Transcribe + Web Speech API fallback | AWS + Browser |
 | TTS | Web Speech API, natural voice selection | Browser |
 | Backend | FastAPI, Mangum, Python 3.12 | AWS Lambda |
-| Database | RDS MySQL 8.0 | Alibaba Cloud KL |
+| Loan/BDA | 16 Lambdas (credit, extraction, disbursement) | AWS Lambda |
+| Database | RDS MySQL 8.0 (OceanBase-compatible) | Alibaba Cloud KL |
 | Frontend | React 19, TypeScript, Tailwind 4, Vite 8 | AWS Amplify |
-| Loan/BDA | 16 Lambdas, Bedrock Nova | AWS |
-| IaC | Terraform | Both clouds |
+| IaC | Terraform (aws + alicloud providers) | Both |
 
 ---
 
 ## Security
 
-Every transaction requires biometric verification before execution. Fraud detection flags large amounts (>RM500), high balance usage (>80%), and first-time recipients. Insufficient funds and negative amounts are rejected. All traffic is HTTPS. Data at rest is encrypted by both cloud providers.
+- Biometric verification (Touch ID / Face ID / PIN) before every transaction
+- Fraud detection: large amounts (>RM500), high balance usage (>80%), first-time recipients
+- Insufficient funds and negative amounts rejected
+- HTTPS on all endpoints (Amplify, API Gateway, Bedrock)
+- Encryption at rest (Alibaba RDS, AWS KMS)
 
 ---
 
 ## API
 
-Two API Gateways:
-
-**FormBuddy** (`w6qtfxl2va`) -- ours:
+<details>
+<summary><b>FormBuddy API</b> — <code>w6qtfxl2va</code></summary>
 
 ```
 GET  /api/v1/user/balance           balance + user name
@@ -100,7 +181,10 @@ POST /api/v1/voice/detect-intent    AI intent detection
 POST /api/v1/voice/transcribe       audio → AWS Transcribe
 ```
 
-**Loan/BDA** (`ku63fvg2sc`) -- teammate's, do not modify:
+</details>
+
+<details>
+<summary><b>Loan / BDA API</b> — <code>ku63fvg2sc</code> (teammate — do not modify)</summary>
 
 ```
 POST /credit/score                  credit score calculation
@@ -110,9 +194,11 @@ POST /extraction/confirm            confirm extracted data
 POST /loan/apply                    loan application + status
 ```
 
+</details>
+
 ---
 
-## Project layout
+## Project Layout
 
 ```
 backend/
@@ -136,23 +222,21 @@ docs/               MASTER_PLAN.md, PRESENTATION_GUIDE.md
 
 ---
 
-## Running locally
+## Running Locally
 
 ```bash
 cd backend && pip install -r requirements.txt && uvicorn main:app --reload
 cd frontend && npm install && VITE_API_URL=http://localhost:8000/api/v1 npm run dev
 ```
 
-Needs Python 3.12, Node 20+, AWS credentials with Bedrock access, and Alibaba Cloud RDS connectivity.
+Needs Python 3.12, Node 20+, AWS credentials with Bedrock access, Alibaba Cloud RDS connectivity.
 
 ---
 
-## Why this wins
+<div align="center">
 
-The demo moment is visceral: uncle speaks rojak Malay, the AI fills the form, balance deducts. Real money, real fraud checks, real database in Malaysia. Not a mockup.
+**FormBuddy** -- financial inclusion, one voice at a time.
 
-BNM's Financial Inclusion Framework 2023-2026 identifies digital onboarding complexity as the barrier. FormBuddy removes it.
+TNG Digital FinHack 2026 · Track 1: Financial Inclusion
 
----
-
-TNG Digital FinHack 2026. Track 1: Financial Inclusion.
+</div>
