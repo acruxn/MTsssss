@@ -42,45 +42,49 @@ Manual form UIs exist for every action too. Same backend, same balance, same fra
 
 ## Architecture
 
-```mermaid
-graph TB
-    subgraph Browser["Browser (HTTPS)"]
-        FE["React 19 + Tailwind 4 + Vite 8"]
-        WSA["Web Speech API<br/><i>live subtitles</i>"]
-        MR["MediaRecorder<br/><i>audio capture</i>"]
-    end
-
-    subgraph AWS["AWS — Singapore"]
-        AG["API Gateway HTTP"]
-        LM["Lambda<br/>FastAPI + Mangum"]
-        BK["Bedrock Claude Sonnet 4.6<br/><i>tool_use · 15 rules</i>"]
-        TR["AWS Transcribe<br/><i>auto-language STT</i>"]
-        AMP["Amplify<br/><i>HTTPS hosting</i>"]
-        subgraph Loan["Loan / BDA (teammate)"]
-            L1["16 Lambdas"]
-            L2["Bedrock Nova<br/><i>bank statement extraction</i>"]
-        end
-    end
-
-    subgraph ALI["Alibaba Cloud — Kuala Lumpur"]
-        RDS["RDS MySQL 8.0<br/><i>OceanBase-compatible</i>"]
-        DB1[("users · transactions<br/>form_templates<br/>voice_sessions")]
-    end
-
-    FE -->|REST| AG
-    MR -->|audio blob| TR
-    AG --> LM
-    LM --> BK
-    LM --> RDS
-    RDS --- DB1
-    FE -->|loan API| L1
-    L1 --> L2
-    AMP -.->|hosts| FE
-
-    style Browser fill:#f8fafc,stroke:#e2e8f0
-    style AWS fill:#fff7ed,stroke:#fed7aa
-    style ALI fill:#eff6ff,stroke:#bfdbfe
-    style Loan fill:#fef3c7,stroke:#fde68a
+```
+                    ┌──────────────────────────────────────┐
+                    │            User's Browser            │
+                    │                                      │
+                    │   React 19 · Tailwind 4 · Vite 8    │
+                    │   Web Speech API (live subtitles)    │
+                    │   MediaRecorder → AWS Transcribe     │
+                    │   Hosted on AWS Amplify (HTTPS)      │
+                    └──────────┬───────────┬───────────────┘
+                               │           │
+                    REST/HTTPS │           │ audio blob
+                               │           │
+          ┌────────────────────▼──────┐    │
+          │     AWS — Singapore       │    │
+          │                           │    │
+          │  ┌─────────────────────┐  │    │
+          │  │ API Gateway HTTP    │  │    │
+          │  │ └─► Lambda (FastAPI)│  │    │
+          │  │     └─► Bedrock     │  │    │
+          │  │        Sonnet 4.6   │  │    │
+          │  │        (tool_use)   │  │    │
+          │  └──────────┬──────────┘  │    │
+          │             │             │    │
+          │  ┌──────────┴──────────┐  │  ┌─▼──────────────┐
+          │  │ Loan / BDA          │  │  │ AWS Transcribe  │
+          │  │ 16 Lambdas          │  │  │ auto-language   │
+          │  │ Bedrock Nova        │  │  │ en/ms/zh/ta     │
+          │  │ (teammate)          │  │  └─────────────────┘
+          │  └─────────────────────┘  │
+          └────────────┬──────────────┘
+                       │
+                       │ pymysql
+                       │
+          ┌────────────▼──────────────┐
+          │  Alibaba Cloud — KL       │
+          │                           │
+          │  RDS MySQL 8.0            │
+          │  (OceanBase-compatible)   │
+          │                           │
+          │  users · transactions     │
+          │  form_templates           │
+          │  voice_sessions           │
+          └───────────────────────────┘
 ```
 
 Data stays in Malaysia on Alibaba Cloud RDS. Compute and AI run on AWS Singapore. Terraform manages both.
