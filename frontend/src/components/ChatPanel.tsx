@@ -200,8 +200,17 @@ export default function ChatPanel({ isOpen, onClose, onAction, language }: ChatP
         return;
       }
       if (submitWords.some(w => lower.includes(w))) {
-        window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "submit_loan" } }));
-        setTimeout(() => window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "refresh_loans" } })), 2000);
+        // Try to extract amount and tenure from text
+        const amtMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:ringgit|rm|RM)?/);
+        const tenureMatch = text.match(/(\d+)\s*(?:month|bulan)/);
+        if (amtMatch) {
+          window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "fill_loan", amount: parseFloat(amtMatch[1]), tenure: tenureMatch ? parseInt(tenureMatch[1]) : undefined } }));
+        }
+        // Small delay to let state update before submit
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "submit_loan" } }));
+          setTimeout(() => window.dispatchEvent(new CustomEvent("loan-voice-action", { detail: { type: "refresh_loans" } })), 2000);
+        }, 100);
         const msg = "Submitting your loan application... 🏦";
         setMessages(prev => [...prev, { role: "assistant", content: msg }]);
         speak(msg, lang);

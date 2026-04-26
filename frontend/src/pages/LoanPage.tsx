@@ -125,7 +125,12 @@ export default function LoanPage({ onNavigate }: { onNavigate: (path: string) =>
         if (detail.tenure) setLoanTenure(Number(detail.tenure));
       }
       else if (detail.type === "submit_loan") {
-        handleApplyLoan();
+        if (!loanAmount || parseFloat(loanAmount) <= 0) {
+          setToast({ type: "error", message: "Please enter a loan amount first." });
+          setTimeout(() => setToast(null), 4000);
+        } else {
+          handleApplyLoan();
+        }
       }
       else if (detail.type === "refresh_loans") fetchLoans();
     };
